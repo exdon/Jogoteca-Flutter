@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "11827647378",
+    "project_id": "jogoteca-exdon",
+    "storage_bucket": "jogoteca-exdon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11827647378:android:e541a4e4d8efa0e868274b",
+        "android_client_info": {
+          "package_name": "com.exdon.jogoteca"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzqad8a16MeT6NM5SaCcL1UMAxML9ls-k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
