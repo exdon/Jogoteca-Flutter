@@ -11,6 +11,8 @@ import '../../service/firebase_service.dart';
 import '../../widget/hacker_transition_screen.dart';
 import '../../widget/app_bar_game.dart';
 import 'game_screen.dart';
+import 'add_players_validator.dart';
+import 'add_players_widgets.dart';
 
 class AddPlayersScreen extends StatefulWidget {
   final String partidaId;
@@ -22,7 +24,6 @@ class AddPlayersScreen extends StatefulWidget {
 }
 
 class _AddPlayersScreenState extends State<AddPlayersScreen> {
-
   bool isAdding = false;
   bool _isNavigating = false;
 
@@ -49,12 +50,8 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
   void dispose() {
     _nomeController.dispose();
     _pinController.dispose();
+    _overlayEntry?.remove();
     super.dispose();
-  }
-
-  bool _isPinValid(String pin) {
-    final pinReg = RegExp(r'^\d{4,6}$');
-    return pinReg.hasMatch(pin);
   }
 
   void _savePlayer() {
@@ -69,12 +66,15 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
       jogadorIndice++;
     });
 
-    if (nome.isEmpty) {
-      _showSnackMessage('Por favor, insira o nome do jogador');
+    final validation = AddPlayersValidator.validatePlayerData(nome, pin);
+
+    if (validation['nome'] != null) {
+      _showSnackMessage(validation['nome']!);
       return;
     }
-    if (!_isPinValid(pin)) {
-      _showSnackMessage('Pin deve ter entre 4 e 6 dígitos numéricos');
+
+    if (validation['pin'] != null) {
+      _showSnackMessage(validation['pin']!);
       return;
     }
 
@@ -131,27 +131,51 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
     }
   }
 
+  void _toggleOverlay() {
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+      return;
+    }
+
+    _overlayEntry = AddPlayersWidgets.createInfoOverlay(
+      context: context,
+      onClose: () {
+        _overlayEntry?.remove();
+        _overlayEntry = null;
+      },
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _cancelAddingPlayer() {
+    _resetTextFields();
+    setState(() => isAdding = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBarGame(),
-      body: BlocListener<PlayersBloc, PlayersState>(listener: (context, state) {
-        if (state is PlayersError) {
-          _showSnackMessage('Erro ao adicionar jogador(a) $nomeJogador: ${state.message}');
-        } else if (state is PlayersLoaded && !isAdding) {
-          if (state.players.isNotEmpty) _showSnackMessage('Jogador(a) $nomeJogador adicionado com sucesso!');
-        }
-      },
+      body: BlocListener<PlayersBloc, PlayersState>(
+        listener: (context, state) {
+          if (state is PlayersError) {
+            _showSnackMessage('Erro ao adicionar jogador(a) $nomeJogador: ${state.message}');
+          } else if (state is PlayersLoaded && !isAdding) {
+            if (state.players.isNotEmpty) {
+              _showSnackMessage('Jogador(a) $nomeJogador adicionado com sucesso!');
+            }
+          }
+        },
         child: Stack(
           children: [
-            // fundo
+            // Fundo
             Positioned.fill(
-              child:
-              Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
+              child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
             ),
-
-            // overlay escuro
+            // Overlay escuro
             Positioned.fill(
               child: Container(color: Colors.black.withOpacity(0.4)),
             ),
@@ -164,11 +188,11 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
               ),
               child: Column(
                 children: [
-                  isAdding ? _buildPlayerFields() : _buildAddButton(),
+                  _buildTopSection(),
                   const SizedBox(height: 24),
-                  _buildPlayersList(),
+                  _buildPlayersListSection(),
                   const SizedBox(height: 12),
-                  _buildStartGameButton(),
+                  _buildStartGameSection(),
                   const SizedBox(height: 54),
                 ],
               ),
@@ -179,298 +203,55 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
     );
   }
 
-  Widget _buildAddButton() {
-    return ElevatedButton.icon(
-      onPressed: _isNavigating ? null : () => setState(() => isAdding = true),
-      icon: const FaIcon(FontAwesomeIcons.userPlus, color: Colors.black),
-      label: const Text(
-        'Adicionar jogador',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: const TextStyle(fontSize: 16),
-      ),
-    );
-  }
-
-  void _toggleOverlay() {
-    if (_overlayEntry != null) {
-      _overlayEntry!.remove();
-      _overlayEntry = null;
-      return;
+  Widget _buildTopSection() {
+    if (isAdding) {
+      return AddPlayersWidgets.buildPlayerFields(
+        nomeController: _nomeController,
+        pinController: _pinController,
+        isNavigating: _isNavigating,
+        onCancel: _cancelAddingPlayer,
+        onSave: _savePlayer,
+      );
+    } else {
+      return AddPlayersWidgets.buildAddButton(
+        isNavigating: _isNavigating,
+        onPressed: () => setState(() => isAdding = true),
+      );
     }
-
-    final screenSize = MediaQuery.of(context).size;
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: screenSize.height / 2 - 100,
-        left: screenSize.width / 2 - 125,
-        child: Material(
-          elevation: 8,
-          color: Colors.transparent,
-          child: Container(
-            width: 250,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Por que adicionar jogadores?',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Isso permite personalizar a experiência e registrar respostas individuais.',
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      _overlayEntry?.remove();
-                      _overlayEntry = null;
-                    },
-                    child: const Text('Fechar'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
   }
 
-  Widget _buildPlayerFields() {
-    return Column(
-      children: [
-        TextField(
-          controller: _nomeController,
-          enabled: !_isNavigating,
-          decoration: InputDecoration(
-            labelText: 'Nome do jogador',
-            labelStyle: const TextStyle(color: Colors.white),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.lightGreen),
-            ),
-            suffixIcon: IconButton(
-              onPressed: () {
-                _resetTextFields();
-                setState(() => isAdding = false);
-              },
-              icon: const Icon(Icons.close, color: Colors.white),
-            ),
-          ),
-          style: const TextStyle(color: Colors.white),
-          cursorColor: Colors.green,
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _pinController,
-          enabled: !_isNavigating,
-          decoration: InputDecoration(
-            labelText: 'PIN (4-6 dígitos)',
-            labelStyle: const TextStyle(color: Colors.white),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.lightGreen),
-            ),
-            counterStyle: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            suffixIcon: IconButton(
-              onPressed: () {
-                _resetTextFields();
-                setState(() => isAdding = false);
-              },
-              icon: const Icon(Icons.close, color: Colors.white),
-            ),
-          ),
-          keyboardType: TextInputType.number,
-          obscureText: true,
-          maxLength: 6,
-          cursorColor: Colors.green,
-          style: const TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: _savePlayer,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white70,
-            foregroundColor: Colors.black,
-          ),
-          child: _isNavigating
-              ? const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-              SizedBox(width: 15),
-              Text('Iniciando...', style: TextStyle(fontSize: 18)),
-            ],
-          )
-              : const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.sports_kabaddi, size: 24),
-              SizedBox(width: 15),
-              Text('Salvar Jogador', style: TextStyle(fontSize: 18)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayersList() {
+  Widget _buildPlayersListSection() {
     return Expanded(
       child: BlocBuilder<PlayersBloc, PlayersState>(
         builder: (context, state) {
           if (state is PlayersLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (state is PlayersLoaded) {
-            final players = state.players;
-
-            if (players.isEmpty) {
-              return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Nenhum jogador cadastrado',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18
-                        ),
-                      ),
-                      Text(
-                        'Adicione jogadores para iniciar o jogo',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 16
-                        ),
-                      ),
-                      const SizedBox(height: 80),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.info_outline, color: Colors.white),
-                            tooltip: 'Mais informações',
-                            onPressed: _toggleOverlay,
-                          ),
-                          Expanded(
-                              child: GestureDetector(
-                                onTap: _toggleOverlay,
-                                child: Card(
-                                  color: Colors.white10,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: Text(
-                                      'Por que devo adicionar jogadores?',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ),
-                              )
-                          ),
-                        ],
-                      )
-                    ],
-                  )
-              );
-            }
-            return Stack(
-              children: [
-                const Align(
-                  alignment: Alignment.topCenter,
-                  child: Text(
-                      'Jogadores:',
-                      style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.white,
-                      ),
-                  ),
-                ),
-                ListView.builder(
-                itemCount: players.length,
-                  itemBuilder: (context, index) {
-                    final player = players[index];
-                    return ListTile(
-                      leading: const Icon(FontAwesomeIcons.userNinja, color: Colors.white),
-                      title: Text(player['nome'], style: const TextStyle(color: Colors.white)),
-                    );
-                  },
-                ),
-              ],
+            return AddPlayersWidgets.buildPlayersList(
+              players: state.players,
+              onToggleOverlay: _toggleOverlay,
             );
           } else if (state is PlayersError) {
             return Center(child: Text('Erro: ${state.message}'));
           } else {
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
         },
       ),
     );
   }
 
-  Widget _buildStartGameButton() {
+  Widget _buildStartGameSection() {
     return BlocBuilder<PlayersBloc, PlayersState>(
       builder: (context, state) {
         final bool canStart = state is PlayersLoaded &&
             state.players.isNotEmpty &&
             !_isNavigating;
 
-        return SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: canStart ? _startGame : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: canStart ? Colors.white70 : Colors.grey,
-              foregroundColor: canStart ? Colors.black : Colors.white54,
-            ),
-            child: _isNavigating
-                ? const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 15),
-                Text('Iniciando...', style: TextStyle(fontSize: 18)),
-              ],
-            )
-                : const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(FontAwesomeIcons.dice),
-                SizedBox(width: 15),
-                Text('Iniciar Jogo', style: TextStyle(fontSize: 18)),
-              ],
-            ),
-          ),
+        return AddPlayersWidgets.buildStartGameButton(
+          canStart: canStart,
+          isNavigating: _isNavigating,
+          onPressed: canStart ? _startGame : null,
         );
       },
     );

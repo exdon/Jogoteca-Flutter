@@ -12,10 +12,13 @@ class FirebaseService {
         .collection('perguntas')
         .get();
 
-    return snapshot.docs.map((doc) => {
+    List<Map<String, dynamic>> questions = snapshot.docs.map((doc) => {
       'id': doc.id,
       ...doc.data(),
     }).toList();
+
+    questions.shuffle(); // randomiza as perguntas
+    return questions;
   }
 
   Future<void> addQuestions(String pergunta, String respostaChatgpt) async {
@@ -159,6 +162,9 @@ class FirebaseService {
     for (var respostasJogador in resultadosPorJogador) {
       todasRespostas.addAll(respostasJogador);
     }
+
+    // RANDOMIZA A ORDEM DOS RESULTADOS
+    todasRespostas.shuffle();
 
     return todasRespostas;
   }

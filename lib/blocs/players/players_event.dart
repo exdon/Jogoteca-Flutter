@@ -59,8 +59,6 @@ class SendDirectMessage extends PlayersEvent {
   final String mensagem;
 
   SendDirectMessage(this.partidaId, this.remetenteId, this.destinatarioId, this.mensagem);
-
-  List<Object?> get props => [partidaId, remetenteId, destinatarioId, mensagem];
 }
 
 class MarkMessageAsRead extends PlayersEvent {
@@ -69,8 +67,6 @@ class MarkMessageAsRead extends PlayersEvent {
   final String messageId;
 
   MarkMessageAsRead(this.partidaId, this.jogadorId, this.messageId);
-
-  List<Object?> get props => [partidaId, jogadorId, messageId];
 }
 
 class MarkAllMessagesAsRead extends PlayersEvent {
@@ -78,6 +74,4 @@ class MarkAllMessagesAsRead extends PlayersEvent {
   final String jogadorId;
 
   MarkAllMessagesAsRead(this.partidaId, this.jogadorId);
-
-  List<Object?> get props => [partidaId, jogadorId];
 }
