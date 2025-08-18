@@ -27,86 +27,88 @@ class AddPlayersWidgets {
     required VoidCallback onCancel,
     required VoidCallback onSave,
   }) {
-    return Column(
-      children: [
-        TextField(
-          controller: nomeController,
-          enabled: !isNavigating,
-          decoration: InputDecoration(
-            labelText: 'Nome do jogador',
-            labelStyle: const TextStyle(color: Colors.white),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.lightGreen),
-            ),
-            suffixIcon: IconButton(
-              onPressed: onCancel,
-              icon: const Icon(Icons.close, color: Colors.white),
-            ),
-          ),
-          style: const TextStyle(color: Colors.white),
-          cursorColor: Colors.green,
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: pinController,
-          enabled: !isNavigating,
-          decoration: InputDecoration(
-            labelText: 'PIN (4-6 dígitos)',
-            labelStyle: const TextStyle(color: Colors.white),
-            enabledBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.lightGreen),
-            ),
-            counterStyle: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            suffixIcon: IconButton(
-              onPressed: onCancel,
-              icon: const Icon(Icons.close, color: Colors.white),
-            ),
-          ),
-          keyboardType: TextInputType.number,
-          obscureText: true,
-          maxLength: 6,
-          cursorColor: Colors.green,
-          style: const TextStyle(color: Colors.white),
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: onSave,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white70,
-            foregroundColor: Colors.black,
-          ),
-          child: isNavigating
-              ? const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
+    return SingleChildScrollView( // Adicione este widget
+      child: Column(
+        children: [
+          TextField(
+            controller: nomeController,
+            enabled: !isNavigating,
+            decoration: InputDecoration(
+              labelText: 'Nome do jogador',
+              labelStyle: const TextStyle(color: Colors.white),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
               ),
-              SizedBox(width: 15),
-              Text('Iniciando...', style: TextStyle(fontSize: 18)),
-            ],
-          )
-              : const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.sports_kabaddi, size: 24),
-              SizedBox(width: 15),
-              Text('Salvar Jogador', style: TextStyle(fontSize: 18)),
-            ],
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.lightGreen),
+              ),
+              suffixIcon: IconButton(
+                onPressed: onCancel,
+                icon: const Icon(Icons.close, color: Colors.white),
+              ),
+            ),
+            style: const TextStyle(color: Colors.white),
+            cursorColor: Colors.green,
           ),
-        ),
-      ],
+          const SizedBox(height: 20),
+          TextField(
+            controller: pinController,
+            enabled: !isNavigating,
+            decoration: InputDecoration(
+              labelText: 'PIN (4-6 dígitos)',
+              labelStyle: const TextStyle(color: Colors.white),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white),
+              ),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.lightGreen),
+              ),
+              counterStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              suffixIcon: IconButton(
+                onPressed: onCancel,
+                icon: const Icon(Icons.close, color: Colors.white),
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            maxLength: 6,
+            cursorColor: Colors.green,
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: onSave,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white70,
+              foregroundColor: Colors.black,
+            ),
+            child: isNavigating
+                ? const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 15),
+                Text('Iniciando...', style: TextStyle(fontSize: 18)),
+              ],
+            )
+                : const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.sports_kabaddi, size: 24),
+                SizedBox(width: 15),
+                Text('Salvar Jogador', style: TextStyle(fontSize: 18)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -115,81 +117,87 @@ class AddPlayersWidgets {
     required VoidCallback onToggleOverlay,
   }) {
     if (players.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Nenhum jogador cadastrado',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            const Text(
-              'Adicione jogadores para iniciar o jogo',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w400,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 80),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.info_outline, color: Colors.white),
-                  tooltip: 'Mais informações',
-                  onPressed: onToggleOverlay,
+      return SingleChildScrollView(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 50),
+              const Text(
+                'Nenhum jogador cadastrado',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: onToggleOverlay,
-                    child: const Card(
-                      color: Colors.white10,
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Text(
-                          'Por que devo adicionar jogadores?',
-                          style: TextStyle(color: Colors.white),
+              ),
+              const Text(
+                'Adicione jogadores para iniciar o jogo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 50),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.info_outline, color: Colors.white),
+                    tooltip: 'Mais informações',
+                    onPressed: onToggleOverlay,
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: onToggleOverlay,
+                      child: const Card(
+                        color: Colors.white10,
+                        child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Text(
+                            'Por que devo adicionar jogadores?',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return Stack(
-      children: [
-        const Align(
-          alignment: Alignment.topCenter,
-          child: Text(
-            'Jogadores:',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white,
+    // Lista de jogadores
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 10),
+      itemCount: players.length + 1, // +1 para o título
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'Jogadores:',
+              style: TextStyle(fontSize: 18, color: Colors.white),
             ),
+          );
+        }
+        final player = players[index - 1];
+        return ListTile(
+          leading: const Icon(FontAwesomeIcons.userNinja, color: Colors.white),
+          title: Text(
+            player['nome'],
+            style: const TextStyle(color: Colors.white),
           ),
-        ),
-        ListView.builder(
-          itemCount: players.length,
-          itemBuilder: (context, index) {
-            final player = players[index];
-            return ListTile(
-              leading: const Icon(FontAwesomeIcons.userNinja, color: Colors.white),
-              title: Text(player['nome'], style: const TextStyle(color: Colors.white)),
-            );
-          },
-        ),
-      ],
+        );
+      },
     );
   }
+
+
+
 
   static Widget buildStartGameButton({
     required bool canStart,

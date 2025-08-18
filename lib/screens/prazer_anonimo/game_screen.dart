@@ -30,8 +30,6 @@ class _GameScreenState extends State<GameScreen> {
   bool hasDirectMessages = false;
   List<Map<String, dynamic>> _players = [];
   String? _directsLoadedFor;
-  bool _showDrinkingPlayers = false;
-  List<String> _drinkingPlayers = [];
   bool _showDrinkingInterface = false;
   int _drinkingCount = 0;
   int _minDrinkingCount = 0;
@@ -41,6 +39,7 @@ class _GameScreenState extends State<GameScreen> {
   String? currentQuestionId;
   String? currentQuestion;
   List<Map<String, dynamic>> directMessages = [];
+  List<Map<String, dynamic>> superAnonimoQuestions = [];
 
   // Managers e controllers
   late final RoundManager _roundManager;
@@ -197,11 +196,27 @@ class _GameScreenState extends State<GameScreen> {
             jogadorId,
             currentQuestion!,
             answer,
-            isSuperAnonimoValid,
-            isSuperAnonimoValid ? perguntaSuperAnonimo : null,
-            isSuperAnonimoValid ? superAnonimoAnswer : null,
+            isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults', // mantém no resultado apenas se for 'toResults'
+            (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') ? perguntaSuperAnonimo : null,
+            (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') ? superAnonimoAnswer : null,
           ),
         );
+
+        // Se for Super Anônimo "para jogador", envia a pergunta sem resposta ao destinatário
+        if (_formControllers.superAnonimoActive &&
+            _formControllers.superAnonimoMode == 'toPlayer') {
+          final destinatarioId = _formControllers.getSelectedSuperAnonimoPlayer()!;
+          final perguntaParaJogador = _formControllers.getPerguntaParaJogador();
+          final remetenteNome = _players.firstWhere((p) => p['id'] == jogadorId)['nome'];
+          playersBloc.add(
+            SendSuperAnonimoQuestion(
+              widget.partidaId,
+              jogadorId,
+              destinatarioId,
+              perguntaParaJogador,
+            ),
+          );
+        }
 
         if (_formControllers.selectedDirectPlayer != null && mensagemDirect.isNotEmpty) {
           playersBloc.add(
@@ -212,6 +227,37 @@ class _GameScreenState extends State<GameScreen> {
               mensagemDirect,
             ),
           );
+        }
+      }
+
+      // Se o jogador atual tem perguntas de SA pendentes, responder todas aqui (obrigatórias)
+      if (superAnonimoQuestions.isNotEmpty) {
+        final saAnswers = _formControllers.getSAInboxAnswers();
+        for (final q in superAnonimoQuestions) {
+          final qid = q['id'] as String;
+          final perguntaSA = q['pergunta']?.toString() ?? '';
+          final respostaSA = saAnswers[qid]?.trim() ?? '';
+          if (respostaSA.isNotEmpty) {
+            // Atualiza backend marcando como respondida
+            if (!playersBloc.isClosed) {
+              playersBloc.add(
+                AnswerSuperAnonimoQuestion(
+                  widget.partidaId,
+                  jogadorId,
+                  qid,
+                  respostaSA,
+                ),
+              );
+            }
+            // Adiciona no resultado da rodada como "pergunta + resposta do jogador escolhido"
+            final jogadorNomeAtual = _players.firstWhere((p) => p['id'] == jogadorId)['nome'];
+            _roundManager.addRoundResult({
+              'jogadorId': jogadorId,
+              'jogadorNome': jogadorNomeAtual,
+              'pergunta': perguntaSA,
+              'resposta': respostaSA,
+            });
+          }
         }
       }
 
@@ -285,6 +331,7 @@ class _GameScreenState extends State<GameScreen> {
       directMessages: directMessages,
       playerId: jogadorId,
       onReadMessage: _showReadMessageDialog,
+      onReadAgainMessage: _showReadMessageAgainDialog
     );
   }
 
@@ -299,6 +346,13 @@ class _GameScreenState extends State<GameScreen> {
       onUpdateMainState: () {
         setState(() {});
       },
+    );
+  }
+
+  void _showReadMessageAgainDialog(Map<String, dynamic> message) {
+    DialogHelper.showReadMessageAgainDialog(
+      context: context,
+      message: message,
     );
   }
 
@@ -322,7 +376,7 @@ class _GameScreenState extends State<GameScreen> {
       appBar: AppBarGame(),
       body: BlocListener<PlayersBloc, PlayersState>(
         listener: (context, state) {
-          if (state is PlayersLoadedWithMessages &&
+          if ((state is PlayersLoadedWithMessages || state is PlayersLoadedWithMessagesAndSA) &&
               _players.isNotEmpty &&
               indice < _players.length) {
 
@@ -332,14 +386,27 @@ class _GameScreenState extends State<GameScreen> {
               return;
             }
 
-            final unread = state.directMessages
+            final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
+                ? state.directMessages
+                : (state as PlayersLoadedWithMessages).directMessages;
+
+            final unread = mensagens
                 .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
                 .toList();
 
             setState(() {
               hasDirectMessages = unread.isNotEmpty;
               directMessages = unread;
+              // SA questions pendentes (somente no novo estado)
+              if (state is PlayersLoadedWithMessagesAndSA) {
+                superAnonimoQuestions = state.superAnonimoQuestions;
+              } else {
+                superAnonimoQuestions = [];
+              }
             });
+
+            // Atualiza controllers com as SA pendentes
+            _formControllers.setPendingSAQuestions(superAnonimoQuestions);
           }
         },
         child: Stack(
@@ -354,18 +421,25 @@ class _GameScreenState extends State<GameScreen> {
             ),
             Padding(
               padding: EdgeInsets.only(
-                top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
+                top: kToolbarHeight + MediaQuery.of(context).padding.top + 10,
                 left: 16,
                 right: 16,
                 bottom: 16,
               ),
               child: BlocBuilder<PlayersBloc, PlayersState>(
                 builder: (context, playersState) {
-                  if (playersState is PlayersLoaded || playersState is PlayersLoadedWithMessages) {
-                    _players = playersState is PlayersLoadedWithMessages
-                        ? (playersState).players
-                        : (playersState as PlayersLoaded).players;
+                  if (playersState is PlayersLoaded ||
+                      playersState is PlayersLoadedWithMessages ||
+                      playersState is PlayersLoadedWithMessagesAndSA) {
 
+                    final currentPlayers =
+                    playersState is PlayersLoaded
+                        ? playersState.players
+                        : playersState is PlayersLoadedWithMessages
+                        ? playersState.players
+                        : (playersState as PlayersLoadedWithMessagesAndSA).players;
+
+                    _players = List<Map<String, dynamic>>.from(currentPlayers);
                     // Ordena pelo campo 'indice' (crescente)
                     _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
 
@@ -373,7 +447,7 @@ class _GameScreenState extends State<GameScreen> {
                       builder: (context, questionsState) {
                         if (questionsState is QuestionsLoaded) {
                           return _buildGameContent(questionsState.questions);
-                        } else if (questionsState is QuestionsLoading) {
+                        } else if (questionsState is QuestionsLoading || questionsState is QuestionsInitial) {
                           return const Center(child: CircularProgressIndicator());
                         } else if (questionsState is QuestionsError) {
                           return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
@@ -505,6 +579,13 @@ class _GameScreenState extends State<GameScreen> {
     final nome = jogador['nome'];
     final id = jogador['id'];
     final pinCorreto = jogador['pin'].toString();
+
+    // ← AQUI você garante que o formControllers conhece as SA pendentes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _formControllers.setPendingSAQuestions(superAnonimoQuestions);
+      }
+    });
     _getNewQuestion(id, perguntas, _players);
 
     return Padding(
@@ -552,6 +633,7 @@ class _GameScreenState extends State<GameScreen> {
                   isProcessing: _isProcessing,
                   players: _players,
                   currentPlayerId: id,
+                  saQuestions: superAnonimoQuestions,
                 ),
               ),
               GameWidgets.buildSaveButton(

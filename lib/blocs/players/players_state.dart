@@ -21,3 +21,10 @@ class ResultsLoaded extends PlayersState {
 
   ResultsLoaded(this.results);
 }
+class PlayersLoadedWithMessagesAndSA extends PlayersState {
+  final List<Map<String, dynamic>> players;
+  final List<Map<String, dynamic>> directMessages;
+  final List<Map<String, dynamic>> superAnonimoQuestions;
+
+  PlayersLoadedWithMessagesAndSA(this.players, this.directMessages, this.superAnonimoQuestions);
+}

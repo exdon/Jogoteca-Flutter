@@ -85,6 +85,7 @@ class DialogHelper {
     required List<Map<String, dynamic>> directMessages,
     required String playerId,
     required Function(Map<String, dynamic>, String, void Function(void Function())?) onReadMessage,
+    required Function(Map<String, dynamic>) onReadAgainMessage,
   }) {
     showDialog(
       context: context,
@@ -110,7 +111,12 @@ class DialogHelper {
                         },
                         child: const Text('Ler'),
                       )
-                          : null,
+                          : TextButton(
+                              onPressed: () {
+                                onReadAgainMessage(message);
+                              },
+                              child: const Text('Reler'),
+                            ),
                     ),
                   );
                 },
@@ -164,6 +170,27 @@ class DialogHelper {
                   setStateDialog(() {});
                 }
               }
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void showReadMessageAgainDialog({
+    required BuildContext context,
+    required Map<String, dynamic> message,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mensagem'),
+        content: Text(message['mensagem']),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
               Navigator.of(context).pop();
             },
           ),

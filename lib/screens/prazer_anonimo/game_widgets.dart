@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:jogoteca/widget/clinking_glasses_effect.dart';
+import 'package:jogoteca/widget/confetti_effect.dart';
+import 'package:jogoteca/widget/broken_heart_effect.dart';
 import 'form_controllers.dart';
 
 class GameWidgets {
   static String capitalize(String text) {
     if (text.isEmpty) return '';
     return '${text[0].toUpperCase()}${text.substring(1)}';
+  }
+
+  static String formatNames(List<String> names) {
+    if (names.isEmpty) return '';
+    if (names.length == 1) return names[0];
+    if (names.length == 2) return '${names[0]} e ${names[1]}';
+    return '${names.sublist(0, names.length - 1).join(', ')} e ${names.last}';
   }
 
   static Widget buildPlayerHeader({
@@ -87,6 +98,7 @@ class GameWidgets {
     required bool isProcessing,
     required List<Map<String, dynamic>> players,
     required String currentPlayerId,
+    required List<Map<String, dynamic>> saQuestions, // NOVO
   }) {
     ValueNotifier<bool> radioEnabled = ValueNotifier<bool>(true);
 
@@ -160,8 +172,14 @@ class GameWidgets {
               );
             },
           ),
-
-          buildSuperAnonimoSection(formControllers),
+          // Inbox de perguntas do Super Anônimo (obrigatórias)
+          buildSAInboxSection(
+            saQuestions: saQuestions,
+            formControllers: formControllers,
+          ),
+          const SizedBox(height: 20),
+          // Super Anônimo (modos)
+          buildSuperAnonimoSection(formControllers, players, currentPlayerId),
           const SizedBox(height: 20),
           buildDirectSection(formControllers, players, currentPlayerId),
           const SizedBox(height: 80),
@@ -170,8 +188,13 @@ class GameWidgets {
     );
   }
 
-  static Widget buildSuperAnonimoSection(FormControllers formControllers) {
+  static Widget buildSuperAnonimoSection(
+      FormControllers formControllers,
+      List<Map<String, dynamic>> players,
+      String currentPlayerId,
+      ) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SwitchListTile(
           title: const Text("Responder como Super Anônimo", style: TextStyle(color: Colors.white)),
@@ -182,42 +205,87 @@ class GameWidgets {
           },
         ),
         if (formControllers.superAnonimoActive) ...[
-          const SizedBox(height: 10),
-          TextField(
-            controller: formControllers.perguntaSuperAnonimoController,
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            decoration: const InputDecoration(
-              labelText: "Digite sua pergunta - Super Anônimo",
-              labelStyle: TextStyle(color: Colors.white),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
+          const SizedBox(height: 8),
+          const Text("Modo do Super Anônimo:", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 12,
+            children: [
+              ChoiceChip(
+                label: const Text("Para resultados"),
+                selected: formControllers.superAnonimoMode == 'toResults',
+                onSelected: (_) => formControllers.setSuperAnonimoMode('toResults'),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
+              ChoiceChip(
+                label: const Text("Pergunta para jogador"),
+                selected: formControllers.superAnonimoMode == 'toPlayer',
+                onSelected: (_) => formControllers.setSuperAnonimoMode('toPlayer'),
               ),
-            ),
-            cursorColor: Colors.green,
-            style: const TextStyle(color: Colors.white),
+            ],
           ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: formControllers.respostaSuperAnonimoController,
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            decoration: const InputDecoration(
-              labelText: "Sua resposta - Super Anônimo",
-              labelStyle: TextStyle(color: Colors.white),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
+          const SizedBox(height: 12),
+
+          if (formControllers.superAnonimoMode == 'toResults') ...[
+            TextField(
+              controller: formControllers.perguntaSuperAnonimoController,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: "Pergunta (Resultados)",
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.lightGreen)),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
-              ),
+              cursorColor: Colors.green,
+              style: const TextStyle(color: Colors.white),
             ),
-            cursorColor: Colors.green,
-            style: const TextStyle(color: Colors.white),
-          ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: formControllers.respostaSuperAnonimoController,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: "Resposta (Resultados)",
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.lightGreen)),
+              ),
+              cursorColor: Colors.green,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ] else ...[
+            const Text("Enviar para:", style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 8),
+            DropdownButton<String>(
+              value: formControllers.selectedSuperAnonimoPlayer,
+              style: const TextStyle(color: Colors.white),
+              dropdownColor: Colors.black,
+              hint: const Text("Selecione um jogador", style: TextStyle(color: Colors.white)),
+              items: players.where((p) => p['id'] != currentPlayerId).map<DropdownMenuItem<String>>((p) {
+                return DropdownMenuItem<String>(
+                  value: p['id'],
+                  child: Text(p['nome']),
+                );
+              }).toList(),
+              onChanged: (value) {
+                formControllers.setSelectedSuperAnonimoPlayer(value);
+              },
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: formControllers.perguntaParaJogadorController,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              decoration: const InputDecoration(
+                labelText: "Pergunta para o jogador",
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.lightGreen)),
+              ),
+              cursorColor: Colors.green,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
         ],
       ],
     );
@@ -281,6 +349,78 @@ class GameWidgets {
     );
   }
 
+  static Widget buildSAInboxSection({
+    required List<Map<String, dynamic>> saQuestions,
+    required FormControllers formControllers,
+  }) {
+    if (saQuestions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        const Text(
+          "Pergunta Recebida do Super Anônimo:",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        ExpansionPanelList.radio(
+          children: saQuestions.map<ExpansionPanelRadio>((q) {
+            final qid = q['id'] as String;
+            final pergunta = q['pergunta']?.toString() ?? '';
+            final ctrl = formControllers.getSAInboxAnswerController(qid);
+
+            return ExpansionPanelRadio(
+              backgroundColor: Color(0xFF214F1B),
+              value: qid,
+              headerBuilder: (context, isExpanded) => ListTile(
+                title: Text(
+                  'Clique para Ver/Responder a Pergunta',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: const Text(
+                  'Responder é obrigatório',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      pergunta,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    TextField(
+                      controller: ctrl,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      decoration: const InputDecoration(
+                        labelText: "Sua resposta",
+                        labelStyle: TextStyle(color: Colors.white),
+                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.lightGreen)),
+                      ),
+                      cursorColor: Colors.green,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   static Widget buildSaveButton({
     required bool isProcessing,
     required VoidCallback onPressed,
@@ -288,9 +428,13 @@ class GameWidgets {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      color: Colors.black.withOpacity(0.5),
       child: ElevatedButton(
         onPressed: isProcessing ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueGrey[900],
+          textStyle: const TextStyle(fontSize: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
         child: isProcessing
             ? const Row(
           mainAxisSize: MainAxisSize.min,
@@ -304,7 +448,10 @@ class GameWidgets {
             Text("Salvando..."),
           ],
         )
-            : const Text("Salvar"),
+            : Padding(
+          padding: EdgeInsetsGeometry.only(top: 15, bottom: 15),
+          child: const Text("Salvar", style: TextStyle(color: Colors.white),),
+        ),
       ),
     );
   }
@@ -313,47 +460,86 @@ class GameWidgets {
     required List<Map<String, dynamic>> roundResults,
     required VoidCallback onContinue,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          const Text("Resultados da rodada",
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Expanded(
-            child: ListView.builder(
-              itemCount: roundResults.length,
-              itemBuilder: (context, index) {
-                final item = roundResults[index];
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Jogador: ${item['jogadorNome']}",
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 6),
-                        Text("Pergunta: ${item['pergunta']}"),
-                        const SizedBox(height: 6),
-                        Text("Resposta: ${item['resposta']}"),
-                      ],
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Resultados da Rodada",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-            ),
+                  SizedBox(width: 10),
+                  Icon(Icons.insert_chart_outlined, color: Colors.lightGreen, size: 30),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Divider(),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: roundResults.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == roundResults.length) {
+                      return const SizedBox(height: 80);
+                    }
+
+                    final item = roundResults[index];
+                    return Card(
+                      margin: const EdgeInsets.all(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage: AssetImage('images/espiao.jpg'),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Jogador: ${item['jogadorNome']}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text("${item['pergunta']}", style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 6),
+                            Text("${item['resposta']}"),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Removido o botão daqui
+            ],
           ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.arrow_forward),
-            label: const Text("Continuar"),
+        ),
+        Positioned(
+          bottom: 16,
+          right: 16,
+          child: FloatingActionButton(
+            foregroundColor: Colors.black,
+            backgroundColor: Colors.lightGreen,
             onPressed: onContinue,
+            child: const Icon(Icons.arrow_forward),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -367,17 +553,22 @@ class GameWidgets {
     required bool hasDrawnPlayers,
     required VoidCallback onNewRound,
   }) {
-    return Column(
-      children: [
-        const SizedBox(height: 50),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // ALTERAÇÃO AQUI - Verificar se noResponseCount é 0
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // ← importante para centralizar
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              hasDrawnPlayers
+                  ? ClinkingGlassesEffect(colorLeft: Colors.orange, colorRight: Colors.yellow)
+                  : noResponseCount == 0
+                    ? ConfettiEffect()
+                    : BrokenHeartEffect(),
+              const SizedBox(height: 10),
+              if (!hasDrawnPlayers)
                 Text(
                   noResponseCount == 0
                       ? "Todos os jogadores responderam as perguntas!"
@@ -385,71 +576,56 @@ class GameWidgets {
                   style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 30),
 
-                // CONDIÇÃO PARA MOSTRAR INTERFACE APENAS SE noResponseCount > 0
-                if (noResponseCount > 0) ...[
-                  if (!hasDrawnPlayers) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (drinkingCount > noResponseCount)
-                          IconButton(
-                            onPressed: onDecrease,
-                            icon: const Icon(Icons.remove, color: Colors.white, size: 30),
-                          ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            drinkingCount.toString(),
-                            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+              const SizedBox(height: 10),
+
+              if (noResponseCount > 0) ...[
+                if (!hasDrawnPlayers) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (drinkingCount > noResponseCount)
                         IconButton(
-                          onPressed: onIncrease,
-                          icon: const Icon(Icons.add, color: Colors.white, size: 30),
+                          onPressed: onDecrease,
+                          icon: const Icon(Icons.remove, color: Colors.white, size: 30),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.shuffle),
-                      label: const Text("Sortear jogadores"),
-                      onPressed: onDrawPlayers,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                      ),
-                    ),
-                  ] else ...[
-                    Card(
-                      color: Colors.red.withOpacity(0.8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: Text(
-                          "${sortedPlayers.join(', ')} ${noResponseCount == 1 ? 'deve' : 'devem'} beber!",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
+                          drinkingCount.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                       ),
+                      IconButton(
+                        onPressed: onIncrease,
+                        icon: const Icon(Icons.add, color: Colors.white, size: 30),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton.icon(
+                    onPressed: onDrawPlayers,
+                    icon: const Icon(Icons.person_search, color: Colors.white),
+                    label: const Text('Sortear jogadores', style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF3E8234),
+                      textStyle: const TextStyle(fontSize: 18),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  ],
+                  )
                 ] else ...[
-                  // CASO noResponseCount == 0, mostrar mensagem "Ninguém deve beber!"
                   Card(
-                    color: Colors.green.withOpacity(0.8),
-                    child: const Padding(
-                      padding: EdgeInsets.all(16),
+                    color: Colors.red.withOpacity(0.8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Text(
-                        "Ninguém deve beber!",
-                        style: TextStyle(
+                        "${formatNames(sortedPlayers)} ${noResponseCount == 1 ? 'deve' : 'devem'} beber!",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -459,21 +635,48 @@ class GameWidgets {
                     ),
                   ),
                 ],
-
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text("Jogar nova rodada"),
-                  onPressed: onNewRound,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+              ] else ...[
+                Card(
+                  color: Colors.green.withOpacity(0.8),
+                  child: const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      "Ninguém deve beber!",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ],
-            ),
+
+              const SizedBox(height: 100),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: onNewRound,
+                  style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF214F1B),
+                  foregroundColor: Colors.white,
+                  ),
+                  child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                      Icon(FontAwesomeIcons.dice),
+                      SizedBox(width: 15),
+                      Text('Jogar Nova Rodada', style: TextStyle(fontSize: 18)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 

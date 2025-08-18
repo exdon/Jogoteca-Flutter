@@ -12,6 +12,16 @@ class FormControllers {
   bool directActive = false;
   String? selectedDirectPlayer;
 
+  // Super Anônimo - modo e campos
+// mode: 'toResults' (pergunta+resposta vai para resultados) ou 'toPlayer' (enviar pergunta para jogador)
+  String superAnonimoMode = 'toResults';
+  final TextEditingController perguntaParaJogadorController = TextEditingController();
+  String? selectedSuperAnonimoPlayer;
+
+// Inbox Super Anônimo (perguntas recebidas que devem ser respondidas)
+  final Map<String, TextEditingController> saInboxAnswerControllers = {};
+  List<Map<String, dynamic>> _pendingSAQuestions = [];
+
   // Callback para notificar mudanças de estado
   VoidCallback? _onStateChanged;
 
@@ -33,6 +43,9 @@ class FormControllers {
     if (!value) {
       perguntaSuperAnonimoController.clear();
       respostaSuperAnonimoController.clear();
+      perguntaParaJogadorController.clear();
+      selectedSuperAnonimoPlayer = null;
+      superAnonimoMode = 'toResults';
     }
     _notifyStateChanged();
   }
@@ -54,7 +67,10 @@ class FormControllers {
   void resetSuperAnonimoFields() {
     perguntaSuperAnonimoController.clear();
     respostaSuperAnonimoController.clear();
+    perguntaParaJogadorController.clear();
+    selectedSuperAnonimoPlayer = null;
     superAnonimoActive = false;
+    superAnonimoMode = 'toResults';
     _notifyStateChanged();
   }
 
@@ -70,11 +86,14 @@ class FormControllers {
     respostaController.clear();
     perguntaSuperAnonimoController.clear();
     respostaSuperAnonimoController.clear();
+    perguntaParaJogadorController.clear();
     mensagemDirectController.clear();
     chooseNo = false;
     superAnonimoActive = false;
+    superAnonimoMode = 'toResults';
     directActive = false;
     selectedDirectPlayer = null;
+    selectedSuperAnonimoPlayer = null;
     _notifyStateChanged();
   }
 
@@ -84,6 +103,34 @@ class FormControllers {
     perguntaSuperAnonimoController.dispose();
     respostaSuperAnonimoController.dispose();
     mensagemDirectController.dispose();
+    perguntaParaJogadorController.dispose();
+    for (var c in saInboxAnswerControllers.values) {
+      c.dispose();
+    }
+  }
+
+  void setSuperAnonimoMode(String mode) {
+    superAnonimoMode = mode;
+    _notifyStateChanged();
+  }
+
+  void setSelectedSuperAnonimoPlayer(String? value) {
+    selectedSuperAnonimoPlayer = value;
+    _notifyStateChanged();
+  }
+
+  TextEditingController getSAInboxAnswerController(String questionId) {
+    return saInboxAnswerControllers.putIfAbsent(questionId, () => TextEditingController());
+  }
+
+  void setPendingSAQuestions(List<Map<String, dynamic>> questions) {
+    _pendingSAQuestions = questions;
+    // Garante controladores para todas
+    for (final q in questions) {
+      final qid = q['id'] as String;
+      saInboxAnswerControllers.putIfAbsent(qid, () => TextEditingController());
+    }
+    _notifyStateChanged();
   }
 
   bool validateFields(BuildContext context) {
@@ -96,18 +143,33 @@ class FormControllers {
       return false;
     }
 
-    // Se super anônimo está ativo, verifica os campos
+    // Super Anônimo ativo
     if (superAnonimoActive) {
-      if (perguntaSuperAnonimoController.text.trim().isEmpty ||
-          respostaSuperAnonimoController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Preencha todos os campos do Super Anônimo ou desabilite a opção")),
-        );
-        return false;
+      if (superAnonimoMode == 'toResults') {
+        if (perguntaSuperAnonimoController.text.trim().isEmpty ||
+            respostaSuperAnonimoController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Preencha pergunta e resposta do Super Anônimo (Resultados) ou desabilite a opção")),
+          );
+          return false;
+        }
+      } else if (superAnonimoMode == 'toPlayer') {
+        if (selectedSuperAnonimoPlayer == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Selecione um jogador para enviar a pergunta (Super Anônimo)")),
+          );
+          return false;
+        }
+        if (perguntaParaJogadorController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Digite a pergunta para o jogador selecionado (Super Anônimo)")),
+          );
+          return false;
+        }
       }
     }
 
-    // Se direct está ativo, verifica os campos
+    // Direct ativo
     if (directActive) {
       if (selectedDirectPlayer == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,11 +177,25 @@ class FormControllers {
         );
         return false;
       }
-      if (selectedDirectPlayer != null && mensagemDirectController.text.trim().isEmpty) {
+      if (mensagemDirectController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Digite a mensagem que será enviada para $selectedDirectPlayer ou desabilite o Direct")),
         );
         return false;
+      }
+    }
+
+    // Perguntas de Super Anônimo recebidas (inbox) devem ser respondidas
+    if (_pendingSAQuestions.isNotEmpty) {
+      for (final q in _pendingSAQuestions) {
+        final qid = q['id'] as String;
+        final ctrl = saInboxAnswerControllers[qid];
+        if (ctrl == null || ctrl.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Responda a(s) pergunta(s) do Super Anônimo recebida(s)")),
+          );
+          return false;
+        }
       }
     }
 
@@ -140,5 +216,16 @@ class FormControllers {
 
   String getMensagemDirect() {
     return mensagemDirectController.text;
+  }
+
+  String getPerguntaParaJogador() => perguntaParaJogadorController.text;
+  String? getSelectedSuperAnonimoPlayer() => selectedSuperAnonimoPlayer;
+
+  Map<String, String> getSAInboxAnswers() {
+    final map = <String, String>{};
+    for (final entry in saInboxAnswerControllers.entries) {
+      map[entry.key] = entry.value.text;
+    }
+    return map;
   }
 }

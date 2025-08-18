@@ -57,7 +57,8 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
       try {
         final jogadores = await service.loadPlayers(event.partidaId);
         final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
-        emit(PlayersLoadedWithMessages(jogadores, mensagens));
+        final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
+        emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
       } catch (e) {
         emit(PlayersError(e.toString()));
       }
@@ -103,6 +104,54 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
     on<MarkAllMessagesAsRead>((event, emit) async {
       try {
         await service.markAllMessagesAsRead(event.partidaId, event.jogadorId);
+      } catch (e) {
+        emit(PlayersError(e.toString()));
+      }
+    });
+
+    on<LoadInbox>((event, emit) async {
+      try {
+        final jogadores = await service.loadPlayers(event.partidaId);
+        final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
+        final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
+        emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
+      } catch (e) {
+        emit(PlayersError(e.toString()));
+      }
+    });
+
+    on<SendSuperAnonimoQuestion>((event, emit) async {
+      try {
+        // Busca o nome do remetente
+        final jogadores = await service.loadPlayers(event.partidaId);
+        final remetente = jogadores.firstWhere((j) => j['id'] == event.remetenteId);
+        final remetenteNome = remetente['nome'];
+
+        await service.sendSuperAnonimoQuestion(
+          event.partidaId,
+          event.remetenteId,
+          event.destinatarioId,
+          event.pergunta,
+          remetenteNome,
+        );
+      } catch (e) {
+        emit(PlayersError(e.toString()));
+      }
+    });
+
+    on<AnswerSuperAnonimoQuestion>((event, emit) async {
+      try {
+        await service.answerSuperAnonimoQuestion(
+          event.partidaId,
+          event.jogadorId,
+          event.questionId,
+          event.resposta,
+        );
+        // Opcional: recarregar inbox após responder
+        final jogadores = await service.loadPlayers(event.partidaId);
+        final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
+        final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
+        emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
       } catch (e) {
         emit(PlayersError(e.toString()));
       }

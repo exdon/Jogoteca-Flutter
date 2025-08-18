@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:jogoteca/screens/prazer_anonimo/adult_content_notify.dart';
 import 'package:jogoteca/screens/prazer_anonimo/rules_screen.dart';
 import 'package:jogoteca/screens/voce_me_conhece/voce_me_conhece_rules_screen.dart';
 
@@ -107,6 +108,62 @@ class HomeScreen extends StatelessWidget {
     ),
   );
 
+  void _adultContentNotifyDialog(BuildContext context, Widget telaDestino) {
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.blueGrey,
+        title: Text(
+          'ATENÇÃO!',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset("images/18+_logo.webp", fit: BoxFit.cover),
+                Text(
+                  'Este jogo tem conteúdo recomendado apenas para maiores de 18 anos',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+                SizedBox(height: 50,),
+                ElevatedButton(
+                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFFcf150e),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                    ),
+                    child: Text('ME TIRE DAQUI')
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => Transicao(telaDestino: telaDestino),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF0e8f0a),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
+                  ),
+                  child: Text('OK, SOU MAIOR DE IDADE'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildGameButtons(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40.0),
@@ -119,6 +176,7 @@ class HomeScreen extends StatelessWidget {
             color: Colors.white70,
             textColor: Colors.black,
             target: const RulesScreen(),
+            alertContent: true
           ),
           const SizedBox(height: 15),
           _buildGameButton(
@@ -128,6 +186,7 @@ class HomeScreen extends StatelessWidget {
             color: Colors.white70,
             textColor: Colors.black,
             target: const VoceMeConheceRulesScreen(),
+            alertContent: false
           ),
           const SizedBox(height: 50),
         ],
@@ -142,14 +201,17 @@ class HomeScreen extends StatelessWidget {
         required Color color,
         required Color textColor,
         required Widget target,
+        required bool alertContent,
       }) {
     return ElevatedButton(
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => Transicao(telaDestino: target),
-          ),
-        );
+      onPressed: () => {
+        alertContent
+            ? _adultContentNotifyDialog(context, target)
+            : Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => Transicao(telaDestino: target),
+                ),
+            ),
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: color,

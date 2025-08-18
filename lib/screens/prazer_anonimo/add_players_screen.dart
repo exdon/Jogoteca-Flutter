@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../blocs/players/players_bloc.dart';
 import '../../blocs/players/players_event.dart';
 import '../../blocs/players/players_state.dart';
-import '../../blocs/questions/questions_bloc.dart';
-import '../../blocs/questions/questions_event.dart';
-import '../../service/firebase_service.dart';
-import '../../widget/hacker_transition_screen.dart';
 import '../../widget/app_bar_game.dart';
-import 'game_screen.dart';
+import '../../widget/hacker_transition_screen.dart';
 import 'add_players_validator.dart';
 import 'add_players_widgets.dart';
 

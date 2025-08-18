@@ -75,3 +75,27 @@ class MarkAllMessagesAsRead extends PlayersEvent {
 
   MarkAllMessagesAsRead(this.partidaId, this.jogadorId);
 }
+
+class SendSuperAnonimoQuestion extends PlayersEvent {
+  final String partidaId;
+  final String remetenteId;
+  final String destinatarioId;
+  final String pergunta;
+
+  SendSuperAnonimoQuestion(this.partidaId, this.remetenteId, this.destinatarioId, this.pergunta);
+}
+
+class LoadInbox extends PlayersEvent {
+  final String partidaId;
+  final String jogadorId;
+  LoadInbox(this.partidaId, this.jogadorId);
+}
+
+class AnswerSuperAnonimoQuestion extends PlayersEvent {
+  final String partidaId;
+  final String jogadorId;
+  final String questionId;
+  final String resposta;
+
+  AnswerSuperAnonimoQuestion(this.partidaId, this.jogadorId, this.questionId, this.resposta);
+}

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game_widgets.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -75,7 +76,7 @@ class FirebaseService {
 
   Future<void> addPlayer(String partidaId, String nome, int pin, int indice) async {
     await _jogadoresRef(partidaId)
-        .add({'nome': nome, 'pin': pin, 'indice': indice});
+        .add({'nome': GameWidgets.capitalize(nome), 'pin': pin, 'indice': indice});
   }
 
   Future<void> addPlayerData(
@@ -256,6 +257,73 @@ class FirebaseService {
     } catch (e) {
       throw Exception('Erro ao marcar mensagens como lidas: $e');
     }
+  }
+
+  // ---------- SUPER ANÔNIMO (PERGUNTAS PARA JOGADORES) ----------
+
+  Future<void> sendSuperAnonimoQuestion(
+      String partidaId,
+      String remetenteId,
+      String destinatarioId,
+      String pergunta,
+      String remetenteNome,
+      ) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(destinatarioId)
+        .collection('superAnonimoQuestion')
+        .add({
+      'remetenteId': remetenteId,
+      'remetenteNome': remetenteNome,
+      'pergunta': pergunta,
+      'resposta': '',
+      'respondida': false,
+      'criadoEm': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> loadSuperAnonimoQuestions(String partidaId, String jogadorId) async {
+    final snapshot = await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(jogadorId)
+        .collection('superAnonimoQuestion')
+        .where('respondida', isEqualTo: false)
+        .orderBy('criadoEm')
+        .get();
+
+    return snapshot.docs.map((doc) => {
+      'id': doc.id,
+      ...doc.data(),
+    }).toList();
+  }
+
+  Future<void> answerSuperAnonimoQuestion(
+      String partidaId,
+      String jogadorId,
+      String questionId,
+      String resposta,
+      ) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(jogadorId)
+        .collection('superAnonimoQuestion')
+        .doc(questionId)
+        .update({
+      'resposta': resposta,
+      'respondida': true,
+    });
   }
 
   Future<void> removePlayer(String partidaId, String jogadorId) async {
