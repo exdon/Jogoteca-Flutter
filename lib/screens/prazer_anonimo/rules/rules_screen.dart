@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jogoteca/screens/prazer_anonimo/add_players/add_players_screen.dart';
+import 'package:jogoteca/screens/prazer_anonimo/rules/rules_constants.dart';
 
-import '../../blocs/players/players_bloc.dart';
-import '../../service/firebase_service.dart';
-import 'add_players_screen.dart';
-import 'rules_constants.dart';
+import '../../../blocs/players/players_bloc.dart';
+import '../../../service/firebase_service.dart';
 
 class RulesScreen extends StatefulWidget {
   const RulesScreen({super.key});

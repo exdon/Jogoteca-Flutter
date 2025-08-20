@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../blocs/players/players_bloc.dart';
-import '../../blocs/players/players_event.dart';
-import '../../blocs/players/players_state.dart';
-import '../../blocs/questions/questions_bloc.dart';
-import '../../blocs/questions/questions_state.dart';
-import '../../widget/app_bar_game.dart';
-import 'game_state_manager.dart';
-import 'round_manager.dart';
-import 'form_controllers.dart';
-import 'dialog_helper.dart';
-import 'game_widgets.dart';
+import 'package:jogoteca/blocs/players/players_bloc.dart';
+import 'package:jogoteca/blocs/players/players_event.dart';
+import 'package:jogoteca/blocs/players/players_state.dart';
+import 'package:jogoteca/blocs/questions/questions_bloc.dart';
+import 'package:jogoteca/blocs/questions/questions_state.dart';
+import 'package:jogoteca/screens/prazer_anonimo/form_controllers.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/dialog_helper.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_widgets.dart';
+import 'package:jogoteca/screens/prazer_anonimo/round_manager.dart';
+import 'package:jogoteca/widget/app_bar_game.dart';
 
 class GameScreen extends StatefulWidget {
   final String partidaId;
@@ -327,11 +326,11 @@ class _GameScreenState extends State<GameScreen> {
 
   void _showDirectMessagesDialog(String jogadorId) {
     DialogHelper.showDirectMessagesDialog(
-      context: context,
-      directMessages: directMessages,
-      playerId: jogadorId,
-      onReadMessage: _showReadMessageDialog,
-      onReadAgainMessage: _showReadMessageAgainDialog
+        context: context,
+        directMessages: directMessages,
+        playerId: jogadorId,
+        onReadMessage: _showReadMessageDialog,
+        onReadAgainMessage: _showReadMessageAgainDialog
     );
   }
 
@@ -373,7 +372,7 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBarGame(),
+      appBar: AppBarGame(disablePartida: true, deletePartida: false, partidaId: widget.partidaId),
       body: BlocListener<PlayersBloc, PlayersState>(
         listener: (context, state) {
           if ((state is PlayersLoadedWithMessages || state is PlayersLoadedWithMessagesAndSA) &&

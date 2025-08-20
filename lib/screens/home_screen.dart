@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:jogoteca/screens/prazer_anonimo/adult_content_notify.dart';
-import 'package:jogoteca/screens/prazer_anonimo/rules_screen.dart';
+import 'package:jogoteca/screens/prazer_anonimo/rules/rules_screen.dart';
 import 'package:jogoteca/screens/voce_me_conhece/voce_me_conhece_rules_screen.dart';
 
 import '../widget/transicao.dart';

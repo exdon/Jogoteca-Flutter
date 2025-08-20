@@ -1,4 +1,6 @@
-import 'game_state_manager.dart';
+
+
+import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager.dart';
 
 class RoundManager {
   List<int> eligiblePlayerIndices = [];

@@ -1,14 +1,15 @@
 import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_screen.dart';
 
 import '../blocs/players/players_bloc.dart';
 import '../blocs/questions/questions_bloc.dart';
 import '../blocs/questions/questions_event.dart';
-import '../screens/prazer_anonimo/game_screen.dart';
 import '../service/firebase_service.dart';
 import 'matrix_code_rain.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class HackerTransitionScreen extends StatefulWidget {
   final String partidaId;

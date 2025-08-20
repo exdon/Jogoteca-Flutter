@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:jogoteca/screens/prazer_anonimo/game_widgets.dart';
+import 'package:jogoteca/shared/shared_functions.dart';
 
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -66,7 +66,9 @@ class FirebaseService {
   }
 
   Future<List<Map<String, dynamic>>> loadPlayers(String partidaId) async {
-    final snapshot = await _jogadoresRef(partidaId).get();
+    final snapshot = await _jogadoresRef(partidaId)
+        .orderBy('indice')
+        .get();
 
     return snapshot.docs.map((doc) => {
       'id': doc.id,
@@ -76,7 +78,7 @@ class FirebaseService {
 
   Future<void> addPlayer(String partidaId, String nome, int pin, int indice) async {
     await _jogadoresRef(partidaId)
-        .add({'nome': GameWidgets.capitalize(nome), 'pin': pin, 'indice': indice});
+        .add({'nome': SharedFunctions.capitalize(nome), 'pin': pin, 'indice': indice});
   }
 
   Future<void> addPlayerData(
@@ -335,5 +337,207 @@ class FirebaseService {
         .collection('jogadores')
         .doc(jogadorId)
         .delete();
+  }
+
+  // ---------- PARTIDA ATIVA ----------
+  Future<void> setPartidaAtiva(String partidaId, bool ativa) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .set({
+      'ativa': ativa,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<bool> isPartidaAtiva(String partidaId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('games')
+          .doc(gameId)
+          .collection('partidas')
+          .doc(partidaId)
+          .get();
+
+      if (snapshot.exists && snapshot.data() != null) {
+        return snapshot.data()!['ativa'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> deletePartida(String partidaId) async {
+    await FirebaseFirestore.instance
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .delete();
+  }
+
+// ---------- SOLICITAÇÕES DE ENTRADA ----------
+  Future<String> sendJoinRequest(String partidaId, String nomeJogador, int pin) async {
+    final ref = await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .add({
+      'nomeJogador': nomeJogador,
+      'pin': pin,
+      'status': 'pending', // pending, approved, rejected
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+    return ref.id;
+  }
+
+  Stream<List<Map<String, dynamic>>> getJoinRequestsStream(String partidaId) {
+    return _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => {
+      'id': doc.id,
+      ...doc.data(),
+    }).toList());
+  }
+
+  Future<bool> partidaExists(String partidaId) async {
+    final snap = await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .get();
+    return snap.exists;
+  }
+
+  Stream<Map<String, dynamic>?> listenJoinRequestStatus(String partidaId, String requestId) {
+    return _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .doc(requestId)
+        .snapshots()
+        .map((doc) => doc.data());
+  }
+
+  Future<void> respondToJoinRequest(String partidaId, String requestId, bool approved) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .doc(requestId)
+        .update({
+      'status': approved ? 'approved' : 'rejected',
+      'respondedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> cancelJoinRequest(String partidaId, String nomeJogador) async {
+    final snapshot = await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .where('nomeJogador', isEqualTo: nomeJogador)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    for (final doc in snapshot.docs) {
+      await doc.reference.update({
+        'status': 'cancelled',
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  Future<void> cancelJoinRequestById(String partidaId, String requestId) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .doc(requestId)
+        .update({
+      'status': 'cancelled',
+      'cancelledAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<String?> getJoinRequestStatus(String partidaId, String nomeJogador) {
+    return _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('joinRequests')
+        .where('nomeJogador', isEqualTo: nomeJogador)
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isEmpty) return null;
+      return snapshot.docs.first.data()['status'] as String?;
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> playersStream(String partidaId) {
+    return _jogadoresRef(partidaId)
+        .orderBy('indice')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => {
+      'id': doc.id,
+      ...doc.data(),
+    }).toList());
+  }
+
+  Future<void> setTurnIndex(String partidaId, int turnIndex) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .set({
+      'turnIndex': turnIndex,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<int?> listenTurnIndex(String partidaId) {
+    return _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .snapshots()
+        .map((doc) => doc.data()?['turnIndex'] as int?);
+  }
+
+  Future<int> getNextPlayerIndex(String partidaId) async {
+    final snapshot = await _jogadoresRef(partidaId).get();
+    if (snapshot.docs.isEmpty) return 1;
+
+    int maxIndex = 0;
+    for (final doc in snapshot.docs) {
+      final indice = doc.data()['indice'] as int? ?? 0;
+      if (indice > maxIndex) maxIndex = indice;
+    }
+    return maxIndex + 1;
   }
 }

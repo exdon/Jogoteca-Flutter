@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:jogoteca/screens/prazer_anonimo/form_controllers.dart';
 import 'package:jogoteca/widget/clinking_glasses_effect.dart';
 import 'package:jogoteca/widget/confetti_effect.dart';
 import 'package:jogoteca/widget/broken_heart_effect.dart';
-import 'form_controllers.dart';
 
 class GameWidgets {
   static String capitalize(String text) {
@@ -167,7 +167,7 @@ class GameWidgets {
                         ? (value) => formControllers.setChooseNo(value ?? false)
                         : null,
                   ),
-                  const Text("Não", style: TextStyle(color: Colors.white)),
+                  const Text("Não", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ],
               );
             },
@@ -194,7 +194,7 @@ class GameWidgets {
       String currentPlayerId,
       ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SwitchListTile(
           title: const Text("Responder como Super Anônimo", style: TextStyle(color: Colors.white)),
@@ -205,23 +205,32 @@ class GameWidgets {
           },
         ),
         if (formControllers.superAnonimoActive) ...[
+          const SizedBox(height: 15),
+          const Text("Modo do Super Anônimo:", style: TextStyle(color: Colors.white, fontSize: 16)),
           const SizedBox(height: 8),
-          const Text("Modo do Super Anônimo:", style: TextStyle(color: Colors.white)),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 12,
-            children: [
-              ChoiceChip(
-                label: const Text("Para resultados"),
-                selected: formControllers.superAnonimoMode == 'toResults',
-                onSelected: (_) => formControllers.setSuperAnonimoMode('toResults'),
+          SegmentedButton<String>(
+            style: SegmentedButton.styleFrom(
+              backgroundColor: Colors.grey[200],
+              foregroundColor: Colors.black,
+              selectedForegroundColor: Colors.white,
+              selectedBackgroundColor: Colors.green,
+            ),
+            segments: const [
+              ButtonSegment(
+                value: 'toResults',
+                label: Text('Para resultados'),
               ),
-              ChoiceChip(
-                label: const Text("Pergunta para jogador"),
-                selected: formControllers.superAnonimoMode == 'toPlayer',
-                onSelected: (_) => formControllers.setSuperAnonimoMode('toPlayer'),
+              ButtonSegment(
+                value: 'toPlayer',
+                label: Text('Para jogador'),
               ),
             ],
+            selected: {formControllers.superAnonimoMode},
+            onSelectionChanged: (newSelection) {
+              if (newSelection.isNotEmpty) {
+                formControllers.setSuperAnonimoMode(newSelection.first);
+              }
+            },
           ),
           const SizedBox(height: 12),
 
@@ -254,13 +263,13 @@ class GameWidgets {
               style: const TextStyle(color: Colors.white),
             ),
           ] else ...[
-            const Text("Enviar para:", style: TextStyle(color: Colors.white)),
+            const Text("Enviar para:", style: TextStyle(color: Colors.white, fontSize: 15)),
             const SizedBox(height: 8),
             DropdownButton<String>(
               value: formControllers.selectedSuperAnonimoPlayer,
               style: const TextStyle(color: Colors.white),
               dropdownColor: Colors.black,
-              hint: const Text("Selecione um jogador", style: TextStyle(color: Colors.white)),
+              hint: const Text("Selecione um jogador", style: TextStyle(color: Colors.white, fontSize: 16)),
               items: players.where((p) => p['id'] != currentPlayerId).map<DropdownMenuItem<String>>((p) {
                 return DropdownMenuItem<String>(
                   value: p['id'],
@@ -297,6 +306,7 @@ class GameWidgets {
         SwitchListTile(
           title: const Text("Enviar Direct", style: TextStyle(color: Colors.white)),
           value: formControllers.directActive,
+          activeColor: Colors.lightGreen,
           onChanged: (value) {
             formControllers.setDirectActive(value);
           },
@@ -305,13 +315,13 @@ class GameWidgets {
           const SizedBox(height: 10),
           Column(
             children: [
-              const Text("Mandar direct para:", style: TextStyle(color: Colors.white)),
+              const Text("Mandar direct para:", style: TextStyle(color: Colors.white, fontSize: 15)),
               const SizedBox(height: 10),
               DropdownButton<String>(
                 value: formControllers.selectedDirectPlayer,
                 style: const TextStyle(color: Colors.white),
                 dropdownColor: Colors.black,
-                hint: const Text("Selecione um jogador", style: TextStyle(color: Colors.white)),
+                hint: const Text("Selecione um jogador", style: TextStyle(color: Colors.white, fontSize: 16)),
                 items: players.where((p) => p['id'] != currentPlayerId).map<DropdownMenuItem<String>>((p) {
                   return DropdownMenuItem<String>(
                     value: p['id'],

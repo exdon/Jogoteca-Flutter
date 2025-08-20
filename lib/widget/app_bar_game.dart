@@ -1,19 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:jogoteca/service/firebase_service.dart';
+import 'package:jogoteca/shared/shared_functions.dart';
 
 import '../screens/home_screen.dart';
 
 class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
+  final bool disablePartida;
+  final bool deletePartida;
+  final String? partidaId;
 
-  const AppBarGame({super.key,});
+  const AppBarGame({
+    super.key,
+    required this.disablePartida,
+    this.partidaId,
+    required this.deletePartida,
+});
 
   Future<void> _encerrarPartida(BuildContext context) async {
     final confirmar = await _mostrarDialogoConfirmacao(context);
     if (confirmar == true && context.mounted) {
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-            (route) => false,
-      );
+      if (partidaId != null && partidaId!.isNotEmpty) {
+        if (deletePartida) {
+          try {
+            await FirebaseService().deletePartida(partidaId!);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erro ao deletar partida: $e')),
+              );
+            }
+          }
+        } else if (disablePartida) {
+          try {
+            await FirebaseService().setPartidaAtiva(partidaId!, false);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erro ao desativar partida: $e')),
+              );
+            }
+          }
+        }
+      }
+
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
+        );
+      }
     }
   }
 

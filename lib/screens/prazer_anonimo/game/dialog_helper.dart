@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../blocs/players/players_bloc.dart';
-import '../../blocs/players/players_event.dart';
+import 'package:jogoteca/blocs/players/players_bloc.dart';
+import 'package:jogoteca/blocs/players/players_event.dart';
 
 class DialogHelper {
   static void showPinDialog({
@@ -39,6 +39,7 @@ class DialogHelper {
               ),
             ),
             obscureText: true,
+            keyboardType: TextInputType.number,
             cursorColor: Colors.green,
           ),
           actions: [
@@ -112,11 +113,11 @@ class DialogHelper {
                         child: const Text('Ler'),
                       )
                           : TextButton(
-                              onPressed: () {
-                                onReadAgainMessage(message);
-                              },
-                              child: const Text('Reler'),
-                            ),
+                        onPressed: () {
+                          onReadAgainMessage(message);
+                        },
+                        child: const Text('Reler'),
+                      ),
                     ),
                   );
                 },
