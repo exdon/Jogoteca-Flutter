@@ -56,8 +56,9 @@ class GameWidgets {
             if (hasDirectMessages && pinValidated)
               IconButton(
                 onPressed: onDirectMessagesPressed,
+                tooltip: 'Você tem mensagens no Direct. Clique para vê-las',
                 icon: const Badge(
-                  child: Icon(Icons.message, color: Colors.blue, size: 30),
+                  child: Icon(Icons.message, color: Colors.greenAccent, size: 35),
                 ),
               ),
           ],
@@ -218,11 +219,15 @@ class GameWidgets {
             segments: const [
               ButtonSegment(
                 value: 'toResults',
-                label: Text('Para resultados'),
+                label: Text('Resultados'),
               ),
               ButtonSegment(
                 value: 'toPlayer',
-                label: Text('Para jogador'),
+                label: Text('Jogador'),
+              ),
+              ButtonSegment(
+                value: 'toChallenge',
+                label: Text('Desafios'),
               ),
             ],
             selected: {formControllers.superAnonimoMode},
@@ -262,6 +267,74 @@ class GameWidgets {
               cursorColor: Colors.green,
               style: const TextStyle(color: Colors.white),
             ),
+          ] else if (formControllers.superAnonimoMode == 'toChallenge') ...[
+              const Text("Desafiar:", style: TextStyle(color: Colors.white, fontSize: 15)),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                style: SegmentedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.black,
+                  selectedForegroundColor: Colors.white,
+                  selectedBackgroundColor: Colors.green,
+                ),
+                segments: const [
+                  ButtonSegment(value: 'one', label: Text('1 jogador')),
+                  ButtonSegment(value: 'two', label: Text('2 jogadores')),
+                  ButtonSegment(value: 'all', label: Text('Todos')),
+                ],
+                selected: {formControllers.challengeTarget},
+                onSelectionChanged: (newSelection) {
+                  if (newSelection.isNotEmpty) {
+                    formControllers.setChallengeTarget(newSelection.first);
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              if (formControllers.challengeTarget != 'all') ...[
+                DropdownButton<String>(
+                  value: formControllers.selectedChallengePlayer1,
+                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.black,
+                  hint: const Text("Jogador 1", style: TextStyle(color: Colors.white)),
+                    items: players.where((p) => p['id'] != currentPlayerId).map<DropdownMenuItem<String>>((p) {
+                    return DropdownMenuItem<String>(
+                      value: p['id'],
+                      child: Text(p['nome'], style: TextStyle(fontSize: 16),),
+                    );
+                  }).toList(),
+                  onChanged: (value) => formControllers.setSelectedChallengePlayer1(value),
+                ),
+              ],
+              if (formControllers.challengeTarget == 'two') ...[
+                const SizedBox(height: 8),
+                DropdownButton<String>(
+                  value: formControllers.selectedChallengePlayer2,
+                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.black,
+                  hint: const Text("Jogador 2", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  items: players.where((p) => p['id'] != currentPlayerId && p['id'] != formControllers.selectedChallengePlayer1).map<DropdownMenuItem<String>>((p) {
+                    return DropdownMenuItem<String>(
+                      value: p['id'],
+                      child: Text(p['nome'], style: TextStyle(fontSize: 16)),
+                    );
+                  }).toList(),
+                  onChanged: (value) => formControllers.setSelectedChallengePlayer2(value),
+                ),
+              ],
+              const SizedBox(height: 10),
+              TextField(
+                controller: formControllers.desafioController,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(
+                  labelText: "Digite o desafio",
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.lightGreen)),
+                ),
+                cursorColor: Colors.green,
+                style: const TextStyle(color: Colors.white),
+              ),
           ] else ...[
             const Text("Enviar para:", style: TextStyle(color: Colors.white, fontSize: 15)),
             const SizedBox(height: 8),
@@ -504,30 +577,54 @@ class GameWidgets {
                     }
 
                     final item = roundResults[index];
+                    final isChallenge = item['isChallenge'] == true;
                     return Card(
                       margin: const EdgeInsets.all(8),
+                      color: isChallenge ? Colors.orange.withOpacity(0.8) : null,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage: AssetImage('images/espiao.jpg'),
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Jogador: ${item['jogadorNome']}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
+                            if (!isChallenge) ...[
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundImage: AssetImage('images/espiao.jpg'),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Jogador: ${item['jogadorNome']}",
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              if (item['pergunta'].toString().isNotEmpty) ...[
+                                Text("${item['pergunta']}", style: TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 6),
                               ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text("${item['pergunta']}", style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 6),
-                            Text("${item['resposta']}"),
+                              Text("${item['resposta']}"),
+                            ] else ...[
+                              Row(
+                                children: [
+                                  Icon(Icons.emoji_events, color: Colors.orange, size: 24),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      "${item['jogadorNome']}",
+                                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "${item['resposta']}",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ],
                         ),
                       ),

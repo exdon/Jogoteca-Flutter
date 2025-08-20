@@ -6,11 +6,16 @@ class FormControllers {
   final TextEditingController perguntaSuperAnonimoController = TextEditingController();
   final TextEditingController respostaSuperAnonimoController = TextEditingController();
   final TextEditingController mensagemDirectController = TextEditingController();
+  final TextEditingController desafioController = TextEditingController();
 
   bool chooseNo = false;
   bool superAnonimoActive = false;
   bool directActive = false;
   String? selectedDirectPlayer;
+
+  String challengeTarget = 'one'; // 'one', 'two', 'all'
+  String? selectedChallengePlayer1;
+  String? selectedChallengePlayer2;
 
   // Super Anônimo - modo e campos
 // mode: 'toResults' (pergunta+resposta vai para resultados) ou 'toPlayer' (enviar pergunta para jogador)
@@ -88,12 +93,16 @@ class FormControllers {
     respostaSuperAnonimoController.clear();
     perguntaParaJogadorController.clear();
     mensagemDirectController.clear();
+    desafioController.clear();
     chooseNo = false;
     superAnonimoActive = false;
     superAnonimoMode = 'toResults';
+    challengeTarget = 'one';
     directActive = false;
     selectedDirectPlayer = null;
     selectedSuperAnonimoPlayer = null;
+    selectedChallengePlayer1 = null;
+    selectedChallengePlayer2 = null;
     _notifyStateChanged();
   }
 
@@ -104,6 +113,7 @@ class FormControllers {
     respostaSuperAnonimoController.dispose();
     mensagemDirectController.dispose();
     perguntaParaJogadorController.dispose();
+    desafioController.dispose();
     for (var c in saInboxAnswerControllers.values) {
       c.dispose();
     }
@@ -130,6 +140,24 @@ class FormControllers {
       final qid = q['id'] as String;
       saInboxAnswerControllers.putIfAbsent(qid, () => TextEditingController());
     }
+    _notifyStateChanged();
+  }
+
+  void setChallengeTarget(String target) {
+    challengeTarget = target;
+    if (target != 'two') {
+      selectedChallengePlayer2 = null;
+    }
+    _notifyStateChanged();
+  }
+
+  void setSelectedChallengePlayer1(String? value) {
+    selectedChallengePlayer1 = value;
+    _notifyStateChanged();
+  }
+
+  void setSelectedChallengePlayer2(String? value) {
+    selectedChallengePlayer2 = value;
     _notifyStateChanged();
   }
 
@@ -163,6 +191,25 @@ class FormControllers {
         if (perguntaParaJogadorController.text.trim().isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Digite a pergunta para o jogador selecionado (Super Anônimo)")),
+          );
+          return false;
+        }
+      } else if (superAnonimoMode == 'toChallenge') {
+        if (challengeTarget != 'all' && selectedChallengePlayer1 == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Selecione pelo menos um jogador para desafiar")),
+          );
+          return false;
+        }
+        if (challengeTarget == 'two' && selectedChallengePlayer2 == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Selecione o segundo jogador para desafiar")),
+          );
+          return false;
+        }
+        if (desafioController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Digite o desafio")),
           );
           return false;
         }
@@ -220,6 +267,9 @@ class FormControllers {
 
   String getPerguntaParaJogador() => perguntaParaJogadorController.text;
   String? getSelectedSuperAnonimoPlayer() => selectedSuperAnonimoPlayer;
+  String getDesafio() => desafioController.text;
+  String? getSelectedChallengePlayer1() => selectedChallengePlayer1;
+  String? getSelectedChallengePlayer2() => selectedChallengePlayer2;
 
   Map<String, String> getSAInboxAnswers() {
     final map = <String, String>{};

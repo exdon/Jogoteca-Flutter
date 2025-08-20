@@ -145,6 +145,7 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBarGame(disablePartida: true, deletePartida: true, partidaId: widget.partidaId),
@@ -189,7 +190,8 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
                   const SizedBox(height: 24),
                   _buildPlayersListSection(),
                   const SizedBox(height: 12),
-                  _buildBottomSection(),
+                  if (!isKeyboardOpen)
+                    _buildBottomSection(),
                 ],
               ),
             ),

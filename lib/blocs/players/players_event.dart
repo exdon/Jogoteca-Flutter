@@ -21,6 +21,7 @@ class AddPlayerData extends PlayersEvent {
   final bool superAnonimo;
   final String? perguntaSuperAnonimo;
   final String? respostaSuperAnonimo;
+  final String? detalhesSuperAnonimo;
 
   AddPlayerData(
       this.partidaId,
@@ -29,7 +30,8 @@ class AddPlayerData extends PlayersEvent {
       this.resposta,
       this.superAnonimo,
       this.perguntaSuperAnonimo,
-      this.respostaSuperAnonimo
+      this.respostaSuperAnonimo,
+      this.detalhesSuperAnonimo
       );
 }
 
@@ -98,4 +100,21 @@ class AnswerSuperAnonimoQuestion extends PlayersEvent {
   final String resposta;
 
   AnswerSuperAnonimoQuestion(this.partidaId, this.jogadorId, this.questionId, this.resposta);
+}
+
+class SendSuperAnonimoChallenge extends PlayersEvent {
+  final String partidaId;
+  final String remetenteId;
+  final String destinatarioId;
+  final String desafio;
+
+  SendSuperAnonimoChallenge(this.partidaId, this.remetenteId, this.destinatarioId, this.desafio);
+}
+
+class MarkChallengeAsCompleted extends PlayersEvent {
+  final String partidaId;
+  final String jogadorId;
+  final String challengeId;
+
+  MarkChallengeAsCompleted(this.partidaId, this.jogadorId, this.challengeId);
 }

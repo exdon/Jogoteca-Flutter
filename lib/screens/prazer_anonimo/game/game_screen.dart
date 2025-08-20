@@ -182,10 +182,35 @@ class _GameScreenState extends State<GameScreen> {
       final perguntaSuperAnonimo = _formControllers.getPerguntaSuperAnonimo();
       final superAnonimoAnswer = _formControllers.getSuperAnonimoAnswer();
       final mensagemDirect = _formControllers.getMensagemDirect();
+      bool shouldAddToResults = false;
+      String? detalhesSuperAnonimo;
 
       // Verifica se é o primeiro a escolher super anônimo nesta rodada
-      bool isSuperAnonimoValid = _formControllers.superAnonimoActive &&
-          GameStateManager.setSuperAnonimoPlayer(widget.partidaId, jogadorId);
+      bool isSuperAnonimoValid = _formControllers.superAnonimoActive;
+
+      if (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') {
+        shouldAddToResults = GameStateManager.setSuperAnonimoPlayer(widget.partidaId, jogadorId);
+        isSuperAnonimoValid = shouldAddToResults;
+      } else if (isSuperAnonimoValid && (_formControllers.superAnonimoMode == 'toPlayer' || _formControllers.superAnonimoMode == 'toChallenge')) {
+        shouldAddToResults = true;
+
+        // Define detalhes para os modos jogador e desafio
+        if (_formControllers.superAnonimoMode == 'toPlayer') {
+          final destinatario = _players.firstWhere((p) => p['id'] == _formControllers.getSelectedSuperAnonimoPlayer());
+          detalhesSuperAnonimo = 'enviou pergunta para jogador ${destinatario['nome']}';
+        } else if (_formControllers.superAnonimoMode == 'toChallenge') {
+          if (_formControllers.challengeTarget == 'all') {
+            detalhesSuperAnonimo = 'enviou desafio para todos os jogadores';
+          } else if (_formControllers.challengeTarget == 'one') {
+            final player1 = _players.firstWhere((p) => p['id'] == _formControllers.getSelectedChallengePlayer1());
+            detalhesSuperAnonimo = 'enviou desafio para jogador ${player1['nome']}';
+          } else {
+            final player1 = _players.firstWhere((p) => p['id'] == _formControllers.getSelectedChallengePlayer1());
+            final player2 = _players.firstWhere((p) => p['id'] == _formControllers.getSelectedChallengePlayer2());
+            detalhesSuperAnonimo = 'enviou desafio para jogadores ${player1['nome']} e ${player2['nome']}';
+          }
+        }
+      }
 
       final playersBloc = context.read<PlayersBloc>();
       if (!playersBloc.isClosed) {
@@ -195,26 +220,113 @@ class _GameScreenState extends State<GameScreen> {
             jogadorId,
             currentQuestion!,
             answer,
-            isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults', // mantém no resultado apenas se for 'toResults'
+            isSuperAnonimoValid,
             (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') ? perguntaSuperAnonimo : null,
             (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') ? superAnonimoAnswer : null,
+            detalhesSuperAnonimo,
           ),
         );
 
-        // Se for Super Anônimo "para jogador", envia a pergunta sem resposta ao destinatário
-        if (_formControllers.superAnonimoActive &&
-            _formControllers.superAnonimoMode == 'toPlayer') {
-          final destinatarioId = _formControllers.getSelectedSuperAnonimoPlayer()!;
-          final perguntaParaJogador = _formControllers.getPerguntaParaJogador();
-          final remetenteNome = _players.firstWhere((p) => p['id'] == jogadorId)['nome'];
-          playersBloc.add(
-            SendSuperAnonimoQuestion(
-              widget.partidaId,
-              jogadorId,
-              destinatarioId,
-              perguntaParaJogador,
-            ),
-          );
+        // Lógica para cada modo do Super Anônimo
+        if (_formControllers.superAnonimoActive) {
+          if (_formControllers.superAnonimoMode == 'toPlayer') {
+            final destinatarioId = _formControllers.getSelectedSuperAnonimoPlayer()!;
+            final perguntaParaJogador = _formControllers.getPerguntaParaJogador();
+            playersBloc.add(
+              SendSuperAnonimoQuestion(
+                widget.partidaId,
+                jogadorId,
+                destinatarioId,
+                perguntaParaJogador,
+              ),
+            );
+          } else if (_formControllers.superAnonimoMode == 'toChallenge') {
+            final desafio = _formControllers.getDesafio();
+
+            // Enviar desafio para jogadores
+            if (_formControllers.challengeTarget == 'all') {
+              for (final player in _players) {
+                if (player['id'] != jogadorId) {
+                  playersBloc.add(
+                    SendSuperAnonimoChallenge(
+                      widget.partidaId,
+                      jogadorId,
+                      player['id'],
+                      desafio,
+                    ),
+                  );
+                }
+              }
+
+              // Adiciona card de desafio nos resultados da rodada
+              _roundManager.addRoundResult({
+                'jogadorId': 'desafio',
+                'jogadorNome': 'Desafio para: Todos',
+                'pergunta': '',
+                'resposta': desafio,
+                'tipo': 'challenge',
+                'isChallenge': true,
+              });
+            } else if (_formControllers.challengeTarget == 'one') {
+              playersBloc.add(
+                SendSuperAnonimoChallenge(
+                  widget.partidaId,
+                  jogadorId,
+                  _formControllers.getSelectedChallengePlayer1()!,
+                  desafio,
+                ),
+              );
+
+              final destId = _formControllers.getSelectedChallengePlayer1()!;
+              final destName = _players.firstWhere((p) => p['id'] == destId)['nome'];
+
+              // Adiciona card de desafio nos resultados da rodada
+              _roundManager.addRoundResult({
+                'jogadorId': 'desafio',
+                'jogadorNome': 'Desafio para: $destName',
+                'pergunta': '',
+                'resposta': desafio,
+                'tipo': 'challenge',
+                'isChallenge': true,
+              });
+            } else {
+              final dest1Id = _formControllers.getSelectedChallengePlayer1()!;
+              final dest1Name = _players.firstWhere((p) => p['id'] == dest1Id)['nome'];
+
+              // Envia desafio para o primeiro jogador
+              playersBloc.add(
+                SendSuperAnonimoChallenge(
+                  widget.partidaId,
+                  jogadorId,
+                  dest1Id,
+                  desafio,
+                ),
+              );
+
+              final dest2Id = _formControllers.getSelectedChallengePlayer2()!;
+              final dest2Name = _players.firstWhere((p) => p['id'] == dest2Id)['nome'];
+              // Envia desafio para o segundo jogador
+              playersBloc.add(
+                SendSuperAnonimoChallenge(
+                  widget.partidaId,
+                  jogadorId,
+                  dest2Id,
+                  desafio,
+                ),
+              );
+
+              // Cria um único card com os dois nomes
+              final nomesCombinados = '$dest1Name e $dest2Name';
+              _roundManager.addRoundResult({
+                'jogadorId': 'desafio',
+                'jogadorNome': 'Desafio para: $nomesCombinados',
+                'pergunta': '',
+                'resposta': desafio,
+                'tipo': 'challenge',
+                'isChallenge': true,
+              });
+            }
+          }
         }
 
         if (_formControllers.selectedDirectPlayer != null && mensagemDirect.isNotEmpty) {
@@ -268,8 +380,8 @@ class _GameScreenState extends State<GameScreen> {
         'resposta': answer,
       });
 
-      // Adiciona resultado do super anônimo se válido
-      if (isSuperAnonimoValid) {
+      // Adiciona resultado do super anônimo apenas no modo 'toResults'
+      if (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') {
         _roundManager.addSuperAnonimoResult(perguntaSuperAnonimo, superAnonimoAnswer);
       }
 
@@ -578,6 +690,7 @@ class _GameScreenState extends State<GameScreen> {
     final nome = jogador['nome'];
     final id = jogador['id'];
     final pinCorreto = jogador['pin'].toString();
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     // ← AQUI você garante que o formControllers conhece as SA pendentes
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -635,10 +748,11 @@ class _GameScreenState extends State<GameScreen> {
                   saQuestions: superAnonimoQuestions,
                 ),
               ),
-              GameWidgets.buildSaveButton(
-                isProcessing: _isProcessing,
-                onPressed: () => _salvarResposta(id, _players),
-              ),
+              if (!isKeyboardOpen)
+                GameWidgets.buildSaveButton(
+                  isProcessing: _isProcessing,
+                  onPressed: () => _salvarResposta(id, _players),
+                ),
             ],
           ],
         ],

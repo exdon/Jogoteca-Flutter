@@ -91,7 +91,8 @@ class DialogHelper {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Directs'),
+        title: const Text('Directs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+        backgroundColor: Color(0xFF0d2412),
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
@@ -102,22 +103,18 @@ class DialogHelper {
                 itemBuilder: (context, index) {
                   final message = directMessages[index];
                   return Card(
+                    color: !message['lida'] ? Color(0xFF214F1B) : null,
                     child: ListTile(
-                      title: const Text('De: **********'),
-                      subtitle: Text(message['lida'] ? '(lida)' : '(não lida)'),
-                      trailing: !message['lida']
-                          ? TextButton(
-                        onPressed: () {
+                      title: const Text('De: **********', style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Text(message['lida'] ? 'Lida' : 'Não lida', textAlign: TextAlign.end,),
+                      subtitleTextStyle: TextStyle(color: !message['lida'] ? Colors.white : Colors.black),
+                      onTap: () {
+                        if (!message['lida']) {
                           onReadMessage(message, playerId, setStateDialog);
-                        },
-                        child: const Text('Ler'),
-                      )
-                          : TextButton(
-                        onPressed: () {
+                        } else {
                           onReadAgainMessage(message);
-                        },
-                        child: const Text('Reler'),
-                      ),
+                        }
+                      },
                     ),
                   );
                 },
@@ -128,7 +125,7 @@ class DialogHelper {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fechar'),
+            child: const Text('Fechar', style: TextStyle(color: Colors.white),),
           ),
         ],
       ),
@@ -149,32 +146,47 @@ class DialogHelper {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Mensagem'),
-        content: Text(message['mensagem']),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              if (!message['lida']) {
-                // Atualiza no backend
-                playersBloc.add(MarkMessageAsRead(partidaId, playerId, message['id']));
+        contentPadding: const EdgeInsets.only(top: 10, left: 24, right: 24, bottom: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Mensagem',
+                  style: TextStyle(
+                    color: Color(0xFF214F1B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    if (!message['lida']) {
+                      playersBloc.add(MarkMessageAsRead(partidaId, playerId, message['id']));
 
-                // Atualiza na lista principal
-                final index = directMessages.indexWhere((m) => m['id'] == message['id']);
-                if (index != -1) {
-                  directMessages[index]['lida'] = true;
-                }
-                onUpdateMainState();
+                      final index = directMessages.indexWhere((m) => m['id'] == message['id']);
+                      if (index != -1) {
+                        directMessages[index]['lida'] = true;
+                      }
+                      onUpdateMainState();
 
-                // Atualiza também no modal da lista
-                if (setStateDialog != null) {
-                  setStateDialog(() {});
-                }
-              }
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
+                      if (setStateDialog != null) {
+                        setStateDialog(() {});
+                      }
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(message['mensagem'], style: TextStyle(fontSize: 16)),
+          ],
+        ),
       ),
     );
   }
@@ -186,16 +198,32 @@ class DialogHelper {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Mensagem'),
-        content: Text(message['mensagem']),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
+        contentPadding: const EdgeInsets.only(top: 10, left: 24, right: 24, bottom: 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Mensagem',
+                  style: TextStyle(
+                    color: Color(0xFF214F1B),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Color(0xFF214F1B),),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(message['mensagem'], style: TextStyle(fontSize: 16),),
+          ],
+        ),
       ),
     );
   }

@@ -88,7 +88,8 @@ class FirebaseService {
       String resposta,
       bool superAnonimo,
       String? perguntaSuperAnonimo,
-      String? respostaSuperAnonimo
+      String? respostaSuperAnonimo,
+      String? detalhesSuperAnonimo
       ) async {
     final respostaData = {
       'pergunta': pergunta,
@@ -101,6 +102,11 @@ class FirebaseService {
     if (superAnonimo && perguntaSuperAnonimo != null && respostaSuperAnonimo != null) {
       respostaData['pergunta_superAnonimo'] = perguntaSuperAnonimo;
       respostaData['resposta_superAnonimo'] = respostaSuperAnonimo;
+    }
+
+    // Adiciona detalhes do super anônimo se fornecido
+    if (superAnonimo && detalhesSuperAnonimo != null) {
+      respostaData['detalhes_superAnonimo'] = detalhesSuperAnonimo;
     }
 
     await _jogadoresRef(partidaId)
@@ -131,7 +137,7 @@ class FirebaseService {
       for (var respostaDoc in respostasSnapshot.docs) {
         Map<String, dynamic> respostaData = respostaDoc.data();
 
-        // Sempre adiciona a resposta normal
+        // Sempre adiciona a resposta normal do jogador
         respostasJogador.add({
           'jogadorId': jogadorId,
           'jogadorNome': jogadorNome,
@@ -140,10 +146,13 @@ class FirebaseService {
           'tipo': 'normal',
         });
 
-        // Se for super anônimo e tiver os campos, adiciona outro objeto com a resposta super anônima
+        // Se for super anônimo modo 'resultados' - adiciona pergunta e resposta do SA
         if (respostaData['superAnonimo'] == true &&
             respostaData['pergunta_superAnonimo'] != null &&
-            respostaData['resposta_superAnonimo'] != null) {
+            respostaData['resposta_superAnonimo'] != null &&
+            respostaData['detalhes_superAnonimo'] == null &&
+            respostaData['pergunta_superAnonimo'].toString().trim().isNotEmpty &&
+            respostaData['resposta_superAnonimo'].toString().trim().isNotEmpty) {
           respostasJogador.add({
             'jogadorId': 'superanonimo',
             'jogadorNome': 'Super Anônimo',
@@ -164,6 +173,66 @@ class FirebaseService {
     List<Map<String, dynamic>> todasRespostas = [];
     for (var respostasJogador in resultadosPorJogador) {
       todasRespostas.addAll(respostasJogador);
+    }
+
+    // Buscar perguntas SA respondidas (modo 'jogador')
+    List<Future<List<Map<String, dynamic>>>> saFutures = jogadoresSnapshot.docs.map((jogadorDoc) async {
+      String jogadorId = jogadorDoc.id;
+      String jogadorNome = jogadorDoc.data()['nome'] ?? 'Jogador';
+
+      final saSnapshot = await _jogadoresRef(partidaId)
+          .doc(jogadorId)
+          .collection('superAnonimoQuestion')
+          .where('respondida', isEqualTo: true)
+          .get();
+
+      List<Map<String, dynamic>> saRespostas = [];
+      for (var saDoc in saSnapshot.docs) {
+        Map<String, dynamic> saData = saDoc.data();
+        saRespostas.add({
+          'jogadorId': jogadorId,
+          'jogadorNome': jogadorNome,
+          'pergunta': saData['pergunta'] ?? '',
+          'resposta': saData['resposta'] ?? '',
+          'tipo': 'sa_question_answered',
+        });
+      }
+      return saRespostas;
+    }).toList();
+
+    List<List<Map<String, dynamic>>> saResultadosPorJogador = await Future.wait(saFutures);
+    for (var saRespostas in saResultadosPorJogador) {
+      todasRespostas.addAll(saRespostas);
+    }
+
+    // Buscar desafios SA (modo 'desafios')
+    List<Future<List<Map<String, dynamic>>>> challengeFutures = jogadoresSnapshot.docs.map((jogadorDoc) async {
+      String jogadorId = jogadorDoc.id;
+      String jogadorNome = jogadorDoc.data()['nome'] ?? 'Jogador';
+
+      final challengeSnapshot = await _jogadoresRef(partidaId)
+          .doc(jogadorId)
+          .collection('superAnonimoChallenge')
+          .get();
+
+      List<Map<String, dynamic>> challengeRespostas = [];
+      for (var challengeDoc in challengeSnapshot.docs) {
+        Map<String, dynamic> challengeData = challengeDoc.data();
+        challengeRespostas.add({
+          'jogadorId': 'desafio',
+          'jogadorNome': 'Desafio para: $jogadorNome',
+          'pergunta': '',
+          'resposta': challengeData['desafio'] ?? '',
+          'tipo': 'challenge',
+          'isChallenge': true,
+        });
+      }
+      return challengeRespostas;
+    }).toList();
+
+    List<List<Map<String, dynamic>>> challengeResultadosPorJogador = await Future.wait(challengeFutures);
+    for (var challengeRespostas in challengeResultadosPorJogador) {
+      todasRespostas.addAll(challengeRespostas);
     }
 
     // RANDOMIZA A ORDEM DOS RESULTADOS
@@ -324,6 +393,68 @@ class FirebaseService {
         .doc(questionId)
         .update({
       'resposta': resposta,
+      'respondida': true,
+    });
+  }
+
+  Future<void> sendSuperAnonimoChallenge(
+      String partidaId,
+      String remetenteId,
+      String destinatarioId,
+      String desafio,
+      String remetenteNome,
+      ) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(destinatarioId)
+        .collection('superAnonimoChallenge')
+        .add({
+      'remetenteId': remetenteId,
+      'remetenteNome': remetenteNome,
+      'desafio': desafio,
+      'respondida': false,
+      'criadoEm': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> loadSuperAnonimoChallenges(String partidaId, String jogadorId) async {
+    final snapshot = await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(jogadorId)
+        .collection('superAnonimoChallenge')
+        .where('respondida', isEqualTo: false)
+        .orderBy('criadoEm')
+        .get();
+
+    return snapshot.docs.map((doc) => {
+      'id': doc.id,
+      ...doc.data(),
+    }).toList();
+  }
+
+  Future<void> markChallengeAsCompleted(
+      String partidaId,
+      String jogadorId,
+      String challengeId,
+      ) async {
+    await _firestore
+        .collection('games')
+        .doc(gameId)
+        .collection('partidas')
+        .doc(partidaId)
+        .collection('jogadores')
+        .doc(jogadorId)
+        .collection('superAnonimoChallenge')
+        .doc(challengeId)
+        .update({
       'respondida': true,
     });
   }

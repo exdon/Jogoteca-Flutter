@@ -37,6 +37,7 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
           event.superAnonimo,
           event.perguntaSuperAnonimo,
           event.respostaSuperAnonimo,
+          event.detalhesSuperAnonimo,
         );
         add(LoadPlayers(event.partidaId));
       } catch (e) {
@@ -152,6 +153,33 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
         final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
         final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
         emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
+      } catch (e) {
+        emit(PlayersError(e.toString()));
+      }
+    });
+
+    on<SendSuperAnonimoChallenge>((event, emit) async {
+      try {
+        // Busca o nome do remetente
+        final jogadores = await service.loadPlayers(event.partidaId);
+        final remetente = jogadores.firstWhere((j) => j['id'] == event.remetenteId);
+        final remetenteNome = remetente['nome'];
+
+        await service.sendSuperAnonimoChallenge(
+          event.partidaId,
+          event.remetenteId,
+          event.destinatarioId,
+          event.desafio,
+          remetenteNome,
+        );
+      } catch (e) {
+        emit(PlayersError(e.toString()));
+      }
+    });
+
+    on<MarkChallengeAsCompleted>((event, emit) async {
+      try {
+        await service.markChallengeAsCompleted(event.partidaId, event.jogadorId, event.challengeId);
       } catch (e) {
         emit(PlayersError(e.toString()));
       }
