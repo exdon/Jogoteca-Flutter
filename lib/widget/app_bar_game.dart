@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:jogoteca/screens/home/home_screen.dart';
 import 'package:jogoteca/service/firebase_service.dart';
-import 'package:jogoteca/shared/shared_functions.dart';
-
-import '../screens/home_screen.dart';
 
 class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
   final bool disablePartida;
@@ -46,7 +44,7 @@ class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
 
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => HomeScreen()),
               (route) => false,
         );
       }
