@@ -2,7 +2,7 @@ import 'package:jogoteca/data/home/home_games.dart';
 import 'package:jogoteca/models/home/home_model.dart';
 
 class HomeData {
-  static const List<HomeModel> carouselGames = [
+  static final List<HomeModel> carouselGames = [
     HomeGames.prazerAnonimo,
     HomeGames.voceMeConhece,
     HomeGames.respondaOuPague,

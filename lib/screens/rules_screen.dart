@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/screens/prazer_anonimo/add_players/add_players_screen.dart';
-import 'package:jogoteca/screens/prazer_anonimo/rules/rules_constants.dart';
 
-import '../../../blocs/players/players_bloc.dart';
-import '../../../service/firebase_service.dart';
+class RulesScreen<T extends StateStreamableSource<Object?>> extends StatefulWidget {
+  final String backgroundImagePath;
+  final String rulesText;
+  final T bloc;
+  final Widget Function(String partidaId, T bloc) destinationBuilder;
 
-class RulesScreen extends StatefulWidget {
-  const RulesScreen({super.key});
+  const RulesScreen({
+    super.key,
+    required this.backgroundImagePath,
+    required this.rulesText,
+    required this.bloc,
+    required this.destinationBuilder,
+  });
 
   @override
-  State<RulesScreen> createState() => _RulesScreenState();
+  State<RulesScreen> createState() => _RulesScreenState<T>();
 }
 
-class _RulesScreenState extends State<RulesScreen> {
+class _RulesScreenState<T extends StateStreamableSource<Object?>> extends State<RulesScreen<T>> {
   double _boxOpacity = 0.0;
   double _textOpacity = 0.0;
 
@@ -35,16 +41,15 @@ class _RulesScreenState extends State<RulesScreen> {
     });
   }
 
-  void _navigateToAddPlayers() {
-    final String partidaId = _generatePartidaId();
-    final playersBloc = PlayersBloc(FirebaseService());
+  void _navigate() {
+    final partidaId = _generatePartidaId();
 
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: playersBloc,
-          child: AddPlayersScreen(partidaId: partidaId),
+          value: widget.bloc,
+          child: widget.destinationBuilder(partidaId, widget.bloc),
         ),
       ),
     );
@@ -71,11 +76,9 @@ class _RulesScreenState extends State<RulesScreen> {
   Widget _buildBackground() {
     return Stack(
       children: [
-        // Fundo
         Positioned.fill(
-          child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
+          child: Image.asset(widget.backgroundImagePath, fit: BoxFit.cover),
         ),
-        // Overlay escuro
         Positioned.fill(
           child: Container(color: Colors.black.withOpacity(0.4)),
         ),
@@ -118,9 +121,9 @@ class _RulesScreenState extends State<RulesScreen> {
                 opacity: _textOpacity,
                 duration: const Duration(milliseconds: 800),
                 curve: Curves.easeIn,
-                child: const Text(
-                  RulesConstants.rulesText,
-                  style: TextStyle(
+                child: Text(
+                  widget.rulesText,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     height: 1.5,
@@ -139,7 +142,7 @@ class _RulesScreenState extends State<RulesScreen> {
       width: double.infinity,
       height: 50,
       child: ElevatedButton.icon(
-        onPressed: _navigateToAddPlayers,
+        onPressed: _navigate,
         icon: const Icon(Icons.play_arrow, color: Colors.white),
         label: const Text('Iniciar', style: TextStyle(color: Colors.white)),
         style: ElevatedButton.styleFrom(

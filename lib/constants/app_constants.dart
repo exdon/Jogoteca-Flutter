@@ -4,7 +4,15 @@ class AppConstants {
   static const String adultContentLogo = "images/18+_logo.webp";
   static const String defaultGameImage = 'images/espiao.jpg';
   static const String prazerAnonimoImage = 'images/prazer_anonimo_banner.png';
+  static const String respondaOuPagueImage = 'images/rp_banner_cut.png';
   static const String appBuildingImage = 'images/app_building.png';
+  static const String backgroundPrazerAnonimo = 'images/background_anonimo.jpg';
+  static const String backgroundRespondaOuPague = 'images/rp_background.png';
+  static const String rpBackgroundTransition = 'images/rp_background_transition.png';
+  static const String rpAngelTransition = 'images/angel.png';
+  static const String rpDemonTransition = 'images/demon.png';
+  static const String lottieFuturisticParticles = 'assets/lottie/futuristic_particles.json';
+  static const String lottieThunder = 'assets/lottie/thunder.json';
 
   // Textos
   static const String attentionTitle = 'ATENÇÃO!';
