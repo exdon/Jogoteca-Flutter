@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:jogoteca/screens/prazer_anonimo/form_controllers.dart';
+import 'package:jogoteca/screens/prazer_anonimo/form_controllers_pa.dart';
 import 'package:jogoteca/widget/clinking_glasses_effect.dart';
 import 'package:jogoteca/widget/confetti_effect.dart';
 import 'package:jogoteca/widget/broken_heart_effect.dart';
@@ -95,7 +95,7 @@ class GameWidgets {
 
   static Widget buildQuestionForm({
     required String question,
-    required FormControllers formControllers,
+    required FormControllersPA formControllers,
     required bool isProcessing,
     required List<Map<String, dynamic>> players,
     required String currentPlayerId,
@@ -190,7 +190,7 @@ class GameWidgets {
   }
 
   static Widget buildSuperAnonimoSection(
-      FormControllers formControllers,
+      FormControllersPA formControllers,
       List<Map<String, dynamic>> players,
       String currentPlayerId,
       ) {
@@ -373,7 +373,7 @@ class GameWidgets {
     );
   }
 
-  static Widget buildDirectSection(FormControllers formControllers, List<Map<String, dynamic>> players, String currentPlayerId) {
+  static Widget buildDirectSection(FormControllersPA formControllers, List<Map<String, dynamic>> players, String currentPlayerId) {
     return Column(
       children: [
         SwitchListTile(
@@ -434,7 +434,7 @@ class GameWidgets {
 
   static Widget buildSAInboxSection({
     required List<Map<String, dynamic>> saQuestions,
-    required FormControllers formControllers,
+    required FormControllersPA formControllers,
   }) {
     if (saQuestions.isEmpty) return const SizedBox.shrink();
 

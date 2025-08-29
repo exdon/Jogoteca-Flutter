@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/blocs/players/players_bloc.dart';
-import 'package:jogoteca/blocs/players/players_event.dart';
-import 'package:jogoteca/blocs/players/players_state.dart';
-import 'package:jogoteca/blocs/questions/questions_bloc.dart';
-import 'package:jogoteca/blocs/questions/questions_state.dart';
-import 'package:jogoteca/screens/prazer_anonimo/form_controllers.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_event_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_state_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_state_pa.dart';
+import 'package:jogoteca/constants/prazer_anonimo/prazer_anonimo_constants.dart';
+import 'package:jogoteca/screens/prazer_anonimo/form_controllers_pa.dart';
 import 'package:jogoteca/screens/prazer_anonimo/game/dialog_helper.dart';
-import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager.dart';
-import 'package:jogoteca/screens/prazer_anonimo/game/game_widgets.dart';
-import 'package:jogoteca/screens/prazer_anonimo/round_manager.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager_pa.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_pa_widgets.dart';
+import 'package:jogoteca/screens/prazer_anonimo/round_manager_pa.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 
-class GameScreen extends StatefulWidget {
+class PrazerAnonimoGameScreen extends StatefulWidget {
   final String partidaId;
 
-  const GameScreen({super.key, required this.partidaId});
+  const PrazerAnonimoGameScreen({super.key, required this.partidaId});
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
+  State<PrazerAnonimoGameScreen> createState() => _PrazerAnonimoGameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
   int indice = 0;
   bool pinValidado = false;
   bool _isProcessing = false;
@@ -41,15 +42,15 @@ class _GameScreenState extends State<GameScreen> {
   List<Map<String, dynamic>> superAnonimoQuestions = [];
 
   // Managers e controllers
-  late final RoundManager _roundManager;
-  late final FormControllers _formControllers;
+  late final RoundManagerPA _roundManager;
+  late final FormControllersPA _formControllers;
 
   @override
   void initState() {
     super.initState();
-    GameStateManager.initializeGame(widget.partidaId);
-    _roundManager = RoundManager();
-    _formControllers = FormControllers();
+    GameStateManagerPA.initializeGame(widget.partidaId);
+    _roundManager = RoundManagerPA();
+    _formControllers = FormControllersPA();
     _formControllers.setStateChangeCallback(() => setState(() {}));
   }
 
@@ -71,8 +72,8 @@ class _GameScreenState extends State<GameScreen> {
     if (_players.isNotEmpty && indice < _players.length) {
       final jogadorAtualId = _players[indice]['id'];
       _directsLoadedFor = jogadorAtualId;
-      context.read<PlayersBloc>().add(
-        LoadDirectMessages(widget.partidaId, jogadorAtualId),
+      context.read<PlayersBlocPA>().add(
+        LoadDirectMessagesPA(widget.partidaId, jogadorAtualId),
       );
     }
   }
@@ -85,7 +86,7 @@ class _GameScreenState extends State<GameScreen> {
       return;
     }
 
-    final questionData = GameStateManager.getNewQuestionForPlayer(widget.partidaId, jogadorId, perguntas, players);
+    final questionData = GameStateManagerPA.getNewQuestionForPlayer(widget.partidaId, jogadorId, perguntas, players);
 
     if (questionData == null) {
       currentQuestionId = null;
@@ -137,13 +138,13 @@ class _GameScreenState extends State<GameScreen> {
         _isProcessing = true;
       });
 
-      final playersBloc = context.read<PlayersBloc>();
+      final playersBloc = context.read<PlayersBlocPA>();
       if (!playersBloc.isClosed) {
         setState(() {
           hasDirectMessages = false;
           directMessages = [];
         });
-        playersBloc.add(LoadDirectMessages(widget.partidaId, jogadorId));
+        playersBloc.add(LoadDirectMessagesPA(widget.partidaId, jogadorId));
       }
 
       await Future.delayed(const Duration(milliseconds: 250));
@@ -176,7 +177,7 @@ class _GameScreenState extends State<GameScreen> {
     });
 
     try {
-      GameStateManager.markQuestionAnswered(widget.partidaId, jogadorId, currentQuestionId!);
+      GameStateManagerPA.markQuestionAnswered(widget.partidaId, jogadorId, currentQuestionId!);
 
       final answer = _formControllers.getAnswer();
       final perguntaSuperAnonimo = _formControllers.getPerguntaSuperAnonimo();
@@ -189,7 +190,7 @@ class _GameScreenState extends State<GameScreen> {
       bool isSuperAnonimoValid = _formControllers.superAnonimoActive;
 
       if (isSuperAnonimoValid && _formControllers.superAnonimoMode == 'toResults') {
-        shouldAddToResults = GameStateManager.setSuperAnonimoPlayer(widget.partidaId, jogadorId);
+        shouldAddToResults = GameStateManagerPA.setSuperAnonimoPlayer(widget.partidaId, jogadorId);
         isSuperAnonimoValid = shouldAddToResults;
       } else if (isSuperAnonimoValid && (_formControllers.superAnonimoMode == 'toPlayer' || _formControllers.superAnonimoMode == 'toChallenge')) {
         shouldAddToResults = true;
@@ -212,10 +213,10 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
 
-      final playersBloc = context.read<PlayersBloc>();
+      final playersBloc = context.read<PlayersBlocPA>();
       if (!playersBloc.isClosed) {
         playersBloc.add(
-          AddPlayerData(
+          AddPlayerDataPA(
             widget.partidaId,
             jogadorId,
             currentQuestion!,
@@ -233,7 +234,7 @@ class _GameScreenState extends State<GameScreen> {
             final destinatarioId = _formControllers.getSelectedSuperAnonimoPlayer()!;
             final perguntaParaJogador = _formControllers.getPerguntaParaJogador();
             playersBloc.add(
-              SendSuperAnonimoQuestion(
+              SendSuperAnonimoQuestionPA(
                 widget.partidaId,
                 jogadorId,
                 destinatarioId,
@@ -248,7 +249,7 @@ class _GameScreenState extends State<GameScreen> {
               for (final player in _players) {
                 if (player['id'] != jogadorId) {
                   playersBloc.add(
-                    SendSuperAnonimoChallenge(
+                    SendSuperAnonimoChallengePA(
                       widget.partidaId,
                       jogadorId,
                       player['id'],
@@ -269,7 +270,7 @@ class _GameScreenState extends State<GameScreen> {
               });
             } else if (_formControllers.challengeTarget == 'one') {
               playersBloc.add(
-                SendSuperAnonimoChallenge(
+                SendSuperAnonimoChallengePA(
                   widget.partidaId,
                   jogadorId,
                   _formControllers.getSelectedChallengePlayer1()!,
@@ -295,7 +296,7 @@ class _GameScreenState extends State<GameScreen> {
 
               // Envia desafio para o primeiro jogador
               playersBloc.add(
-                SendSuperAnonimoChallenge(
+                SendSuperAnonimoChallengePA(
                   widget.partidaId,
                   jogadorId,
                   dest1Id,
@@ -307,7 +308,7 @@ class _GameScreenState extends State<GameScreen> {
               final dest2Name = _players.firstWhere((p) => p['id'] == dest2Id)['nome'];
               // Envia desafio para o segundo jogador
               playersBloc.add(
-                SendSuperAnonimoChallenge(
+                SendSuperAnonimoChallengePA(
                   widget.partidaId,
                   jogadorId,
                   dest2Id,
@@ -331,7 +332,7 @@ class _GameScreenState extends State<GameScreen> {
 
         if (_formControllers.selectedDirectPlayer != null && mensagemDirect.isNotEmpty) {
           playersBloc.add(
-            SendDirectMessage(
+            SendDirectMessagePA(
               widget.partidaId,
               jogadorId,
               _formControllers.selectedDirectPlayer!,
@@ -352,7 +353,7 @@ class _GameScreenState extends State<GameScreen> {
             // Atualiza backend marcando como respondida
             if (!playersBloc.isClosed) {
               playersBloc.add(
-                AnswerSuperAnonimoQuestion(
+                AnswerSuperAnonimoQuestionPA(
                   widget.partidaId,
                   jogadorId,
                   qid,
@@ -389,10 +390,10 @@ class _GameScreenState extends State<GameScreen> {
       _formControllers.resetAllFields();
 
       if (_roundManager.isRoundComplete) {
-        final questionsBloc = context.read<QuestionsBloc>();
-        if (questionsBloc.state is QuestionsLoaded) {
-          final perguntas = (questionsBloc.state as QuestionsLoaded).questions;
-          final iaAnonimoData = GameStateManager.getIAnonimoQuestionAnswer(widget.partidaId, perguntas);
+        final questionsBloc = context.read<QuestionsBlocPA>();
+        if (questionsBloc.state is QuestionsLoadedPA) {
+          final perguntas = (questionsBloc.state as QuestionsLoadedPA).questions;
+          final iaAnonimoData = GameStateManagerPA.getIAnonimoQuestionAnswer(widget.partidaId, perguntas);
           if (iaAnonimoData != null) {
             _roundManager.addRoundResult({
               'jogadorId': 'ianonimo',
@@ -484,10 +485,16 @@ class _GameScreenState extends State<GameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBarGame(disablePartida: true, deletePartida: false, partidaId: widget.partidaId),
-      body: BlocListener<PlayersBloc, PlayersState>(
+      appBar: AppBarGame(
+        disablePartida: true, 
+        deletePartida: false, 
+        partidaId: widget.partidaId, 
+        gameId: PrazerAnonimoConstants.gameId,
+        database: PrazerAnonimoConstants.dbPartidas,
+      ),
+      body: BlocListener<PlayersBlocPA, PlayersStatePA>(
         listener: (context, state) {
-          if ((state is PlayersLoadedWithMessages || state is PlayersLoadedWithMessagesAndSA) &&
+          if ((state is PlayersLoadedWithMessagesPA || state is PlayersLoadedWithMessagesAndSA) &&
               _players.isNotEmpty &&
               indice < _players.length) {
 
@@ -499,7 +506,7 @@ class _GameScreenState extends State<GameScreen> {
 
             final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
                 ? state.directMessages
-                : (state as PlayersLoadedWithMessages).directMessages;
+                : (state as PlayersLoadedWithMessagesPA).directMessages;
 
             final unread = mensagens
                 .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
@@ -537,16 +544,16 @@ class _GameScreenState extends State<GameScreen> {
                 right: 16,
                 bottom: 16,
               ),
-              child: BlocBuilder<PlayersBloc, PlayersState>(
+              child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(
                 builder: (context, playersState) {
-                  if (playersState is PlayersLoaded ||
-                      playersState is PlayersLoadedWithMessages ||
+                  if (playersState is PlayersLoadedPA ||
+                      playersState is PlayersLoadedWithMessagesPA ||
                       playersState is PlayersLoadedWithMessagesAndSA) {
 
                     final currentPlayers =
-                    playersState is PlayersLoaded
+                    playersState is PlayersLoadedPA
                         ? playersState.players
-                        : playersState is PlayersLoadedWithMessages
+                        : playersState is PlayersLoadedWithMessagesPA
                         ? playersState.players
                         : (playersState as PlayersLoadedWithMessagesAndSA).players;
 
@@ -554,22 +561,22 @@ class _GameScreenState extends State<GameScreen> {
                     // Ordena pelo campo 'indice' (crescente)
                     _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
 
-                    return BlocBuilder<QuestionsBloc, QuestionsState>(
+                    return BlocBuilder<QuestionsBlocPA, QuestionsStatePA>(
                       builder: (context, questionsState) {
-                        if (questionsState is QuestionsLoaded) {
+                        if (questionsState is QuestionsLoadedPA) {
                           return _buildGameContent(questionsState.questions);
-                        } else if (questionsState is QuestionsLoading || questionsState is QuestionsInitial) {
+                        } else if (questionsState is QuestionsLoadingPA || questionsState is QuestionsInitialPA) {
                           return const Center(child: CircularProgressIndicator());
-                        } else if (questionsState is QuestionsError) {
+                        } else if (questionsState is QuestionsErrorPA) {
                           return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
                         } else {
                           return const SizedBox.shrink();
                         }
                       },
                     );
-                  } else if (playersState is PlayersLoading) {
+                  } else if (playersState is PlayersLoadingPA) {
                     return const Center(child: CircularProgressIndicator());
-                  } else if (playersState is PlayersError) {
+                  } else if (playersState is PlayersErrorPA) {
                     return Center(child: Text("Erro ao carregar jogadores: ${playersState.message}", style: TextStyle(color: Colors.white)));
                   } else {
                     return const SizedBox.shrink();
@@ -600,7 +607,7 @@ class _GameScreenState extends State<GameScreen> {
       return GameWidgets.buildGameOverScreen(
         onNewGame: () {
           setState(() {
-            GameStateManager.removeGame(widget.partidaId);
+            GameStateManagerPA.removeGame(widget.partidaId);
             _roundManager.resetGame();
           });
         },

@@ -1,8 +1,8 @@
 
 
-import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager_pa.dart';
 
-class RoundManager {
+class RoundManagerPA {
   List<int> eligiblePlayerIndices = [];
   int eligiblePointer = 0;
   List<Map<String, dynamic>> roundResults = [];
@@ -18,12 +18,12 @@ class RoundManager {
   // Prepara uma nova rodada
   void prepareNewRound(String partidaId, List<Map<String, dynamic>> players, List<Map<String, dynamic>> perguntas) {
     // Reset do super anônimo para nova rodada
-    GameStateManager.removeSuperAnonimoPlayer(partidaId);
+    GameStateManagerPA.removeSuperAnonimoPlayer(partidaId);
 
     final localEligible = <int>[];
     for (var i = 0; i < players.length; i++) {
       final pid = players[i]['id'];
-      if (GameStateManager.hasAvailableQuestionForPlayer(partidaId, pid, perguntas, players)) {
+      if (GameStateManagerPA.hasAvailableQuestionForPlayer(partidaId, pid, perguntas, players)) {
         localEligible.add(i);
       }
     }
@@ -77,7 +77,7 @@ class RoundManager {
 
   // Verifica se o jogo acabou
   bool checkGameOver(String partidaId, List<Map<String, dynamic>> perguntas, List<Map<String, dynamic>> players) {
-    final allDone = GameStateManager.areAllQuestionsAnsweredByEveryone(partidaId, perguntas, players);
+    final allDone = GameStateManagerPA.areAllQuestionsAnsweredByEveryone(partidaId, perguntas, players);
     if (allDone) {
       gameOver = true;
     }

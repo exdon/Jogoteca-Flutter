@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/blocs/players/players_bloc.dart';
-import 'package:jogoteca/blocs/players/players_event.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_event_pa.dart';
 
 class DialogHelper {
   static void showPinDialog({
@@ -141,7 +141,7 @@ class DialogHelper {
     required void Function(void Function())? setStateDialog,
     required VoidCallback onUpdateMainState,
   }) {
-    final playersBloc = context.read<PlayersBloc>();
+    final playersBloc = context.read<PlayersBlocPA>();
 
     showDialog(
       context: context,
@@ -166,7 +166,7 @@ class DialogHelper {
                   icon: const Icon(Icons.close),
                   onPressed: () {
                     if (!message['lida']) {
-                      playersBloc.add(MarkMessageAsRead(partidaId, playerId, message['id']));
+                      playersBloc.add(MarkMessageAsReadPA(partidaId, playerId, message['id']));
 
                       final index = directMessages.indexWhere((m) => m['id'] == message['id']);
                       if (index != -1) {

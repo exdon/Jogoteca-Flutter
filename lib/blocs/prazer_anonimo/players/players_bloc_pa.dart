@@ -1,33 +1,32 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/blocs/players/players_event.dart';
-import 'package:jogoteca/blocs/players/players_state.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_event_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_state_pa.dart';
+import 'package:jogoteca/service/prazer_anonimo/prazer_anonimo_service.dart';
 
-import '../../service/firebase_service.dart';
+class PlayersBlocPA extends Bloc<PlayersEventPA, PlayersStatePA> {
+  final PrazerAnonimoService service;
 
-class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
-  final FirebaseService service;
-
-  PlayersBloc(this.service) : super(PlayersInitial()) {
-    on<LoadPlayers>((event, emit) async {
-      emit(PlayersLoading());
+  PlayersBlocPA(this.service) : super(PlayersInitialPA()) {
+    on<LoadPlayersPA>((event, emit) async {
+      emit(PlayersLoadingPA());
       try {
         final lista = await service.loadPlayers(event.partidaId);
-        emit(PlayersLoaded(lista));
+        emit(PlayersLoadedPA(lista));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<AddPlayer>((event, emit) async {
+    on<AddPlayerPA>((event, emit) async {
       try {
         await service.addPlayer(event.partidaId, event.nome, event.pin, event.indice);
-        add(LoadPlayers(event.partidaId));
+        add(LoadPlayersPA(event.partidaId));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<AddPlayerData>((event, emit) async {
+    on<AddPlayerDataPA>((event, emit) async {
       try {
         await service.addPlayerData(
           event.partidaId,
@@ -39,43 +38,43 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
           event.respostaSuperAnonimo,
           event.detalhesSuperAnonimo,
         );
-        add(LoadPlayers(event.partidaId));
+        add(LoadPlayersPA(event.partidaId));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<RemovePlayer>((event, emit) async {
+    on<RemovePlayerPA>((event, emit) async {
       try {
         await service.removePlayer(event.partidaId, event.jogadorId);
-        add(LoadPlayers(event.partidaId));
+        add(LoadPlayersPA(event.partidaId));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<LoadDirectMessages>((event, emit) async {
+    on<LoadDirectMessagesPA>((event, emit) async {
       try {
         final jogadores = await service.loadPlayers(event.partidaId);
         final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
         final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
         emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<LoadResults>((event, emit) async {
-      emit(ResultsLoading());
+    on<LoadResultsPA>((event, emit) async {
+      emit(ResultsLoadingPA());
       try {
         final resultados = await service.loadResultsOptimized(event.partidaId);
-        emit(ResultsLoaded(resultados));
+        emit(ResultsLoadedPA(resultados));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<SendDirectMessage>((event, emit) async {
+    on<SendDirectMessagePA>((event, emit) async {
       try {
         // Busca o nome do remetente
         final jogadores = await service.loadPlayers(event.partidaId);
@@ -90,38 +89,38 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
           remetenteNome,
         );
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<MarkMessageAsRead>((event, emit) async {
+    on<MarkMessageAsReadPA>((event, emit) async {
       try {
         await service.markMessageAsRead(event.partidaId, event.jogadorId, event.messageId);
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<MarkAllMessagesAsRead>((event, emit) async {
+    on<MarkAllMessagesAsReadPA>((event, emit) async {
       try {
         await service.markAllMessagesAsRead(event.partidaId, event.jogadorId);
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<LoadInbox>((event, emit) async {
+    on<LoadInboxPA>((event, emit) async {
       try {
         final jogadores = await service.loadPlayers(event.partidaId);
         final mensagens = await service.loadDirectMessages(event.partidaId, event.jogadorId);
         final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
         emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<SendSuperAnonimoQuestion>((event, emit) async {
+    on<SendSuperAnonimoQuestionPA>((event, emit) async {
       try {
         // Busca o nome do remetente
         final jogadores = await service.loadPlayers(event.partidaId);
@@ -136,11 +135,11 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
           remetenteNome,
         );
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<AnswerSuperAnonimoQuestion>((event, emit) async {
+    on<AnswerSuperAnonimoQuestionPA>((event, emit) async {
       try {
         await service.answerSuperAnonimoQuestion(
           event.partidaId,
@@ -154,11 +153,11 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
         final saQuestions = await service.loadSuperAnonimoQuestions(event.partidaId, event.jogadorId);
         emit(PlayersLoadedWithMessagesAndSA(jogadores, mensagens, saQuestions));
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<SendSuperAnonimoChallenge>((event, emit) async {
+    on<SendSuperAnonimoChallengePA>((event, emit) async {
       try {
         // Busca o nome do remetente
         final jogadores = await service.loadPlayers(event.partidaId);
@@ -173,15 +172,15 @@ class PlayersBloc extends Bloc<PlayersEvent, PlayersState> {
           remetenteNome,
         );
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
 
-    on<MarkChallengeAsCompleted>((event, emit) async {
+    on<MarkChallengeAsCompletedPA>((event, emit) async {
       try {
         await service.markChallengeAsCompleted(event.partidaId, event.jogadorId, event.challengeId);
       } catch (e) {
-        emit(PlayersError(e.toString()));
+        emit(PlayersErrorPA(e.toString()));
       }
     });
   }

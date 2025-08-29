@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/blocs/players/players_bloc.dart';
-import 'package:jogoteca/blocs/players/players_event.dart';
-import 'package:jogoteca/blocs/players/players_state.dart';
-import 'package:jogoteca/screens/prazer_anonimo/add_players/add_players_validator.dart';
-import 'package:jogoteca/screens/prazer_anonimo/add_players/widgets_build.dart';
-import 'package:jogoteca/service/firebase_service.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_event_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_state_pa.dart';
+import 'package:jogoteca/constants/prazer_anonimo/prazer_anonimo_constants.dart';
+import 'package:jogoteca/screens/prazer_anonimo/add_players/add_players_pa_validator.dart';
+import 'package:jogoteca/screens/prazer_anonimo/add_players/widgets_pa_build.dart';
+import 'package:jogoteca/shared/service/shared_service.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 import 'package:jogoteca/widget/hacker_transition_screen.dart';
 
 
-class AddPlayersScreen extends StatefulWidget {
+class AddPlayersPAScreen extends StatefulWidget {
   final String partidaId;
 
-  const AddPlayersScreen({super.key, required this.partidaId});
+  const AddPlayersPAScreen({super.key, required this.partidaId});
 
   @override
-  State<AddPlayersScreen> createState() => _AddPlayersScreenState();
+  State<AddPlayersPAScreen> createState() => _AddPlayersPAScreenState();
 }
 
-class _AddPlayersScreenState extends State<AddPlayersScreen> {
+class _AddPlayersPAScreenState extends State<AddPlayersPAScreen> {
 
   bool isAdding = false;
   final _nomeController = TextEditingController();
@@ -34,8 +35,12 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
   void initState() {
     super.initState();
 
-    context.read<PlayersBloc>().add(LoadPlayers(widget.partidaId));
-    FirebaseService().setPartidaAtiva(widget.partidaId, true);
+    context.read<PlayersBlocPA>().add(LoadPlayersPA(widget.partidaId));
+    SharedService(
+        gameId: PrazerAnonimoConstants.gameId,
+        database: PrazerAnonimoConstants.dbPartidas,
+        partidaId: widget.partidaId,
+    ).setPartidaAtiva(true);
   }
 
 
@@ -65,7 +70,7 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
       return;
     }
 
-    _overlayEntry = WidgetsBuild.createInfoOverlay(
+    _overlayEntry = WidgetsPABuild.createInfoOverlay(
       context: context,
       onClose: () {
         _overlayEntry?.remove();
@@ -87,7 +92,7 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
       jogadorIndice++;
     });
 
-    final validation = AddPlayersValidator.validatePlayerData(nome, pin);
+    final validation = AddPlayersPAValidator.validatePlayerData(nome, pin);
 
     if (validation['nome'] != null) {
       SharedFunctions.showSnackMessage(message: validation['nome']!, mounted: mounted, context: context);
@@ -100,8 +105,8 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
     }
 
     try {
-      context.read<PlayersBloc>().add(
-          AddPlayer(
+      context.read<PlayersBlocPA>().add(
+          AddPlayerPA(
             widget.partidaId,
             jogadorIndice,
             nome,
@@ -129,7 +134,7 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
         MaterialPageRoute(
           builder: (_) => HackerTransitionScreen(
             partidaId: widget.partidaId,
-            playersBloc: context.read<PlayersBloc>(),
+            playersBloc: context.read<PlayersBlocPA>(),
           ),
         ),
       );
@@ -148,16 +153,22 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBarGame(disablePartida: true, deletePartida: true, partidaId: widget.partidaId),
-      body: BlocListener<PlayersBloc, PlayersState>(
+      appBar: AppBarGame(
+        disablePartida: true,
+        deletePartida: true,
+        partidaId: widget.partidaId,
+        gameId: PrazerAnonimoConstants.gameId,
+        database: PrazerAnonimoConstants.dbPartidas,
+      ),
+      body: BlocListener<PlayersBlocPA, PlayersStatePA>(
         listener: (context, state) {
-          if (state is PlayersError) {
+          if (state is PlayersErrorPA) {
             SharedFunctions.showSnackMessage(
                 message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
                 mounted: mounted,
                 context: context
             );
-          } else if (state is PlayersLoaded) {
+          } else if (state is PlayersLoadedPA) {
             if (state.players.isNotEmpty) {
               SharedFunctions.showSnackMessage(
                   message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
@@ -203,14 +214,14 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
 
   Widget _buildTopSection() {
     if (isAdding) {
-      return WidgetsBuild.buildPlayerFields(
+      return WidgetsPABuild.buildPlayerFields(
           nomeController: _nomeController,
           pinController: _pinController,
           onCancel: _cancelAddingPlayer,
           onSave: _savePlayer,
       );
     } else {
-      return WidgetsBuild.buildAddButton(
+      return WidgetsPABuild.buildAddButton(
         onPressed: () => setState(() => isAdding = true),
       );
     }
@@ -218,16 +229,16 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
 
   Widget _buildPlayersListSection() {
     return Expanded(
-      child: BlocBuilder<PlayersBloc, PlayersState>(builder: (context, state) {
-          if (state is PlayersLoading) {
+      child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(builder: (context, state) {
+          if (state is PlayersLoadingPA) {
             return const Center(child: CircularProgressIndicator());
-          } else if (state is PlayersLoaded) {
-            return WidgetsBuild.buildPlayersList(
+          } else if (state is PlayersLoadedPA) {
+            return WidgetsPABuild.buildPlayersList(
               players: state.players,
               onToggleOverlay: _toggleOverlay,
             );
-          } else if (state is PlayersError) {
-            return Center(child: Text('Erro: ${state.message}'));
+          } else if (state is PlayersErrorPA) {
+            return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
           } else {
             return const SizedBox.shrink();
           }
@@ -237,13 +248,13 @@ class _AddPlayersScreenState extends State<AddPlayersScreen> {
   }
 
   Widget _buildBottomSection() {
-    return BlocBuilder<PlayersBloc, PlayersState>(builder: (context, state) {
+    return BlocBuilder<PlayersBlocPA, PlayersStatePA>(builder: (context, state) {
 
-        final bool canStart = state is PlayersLoaded && state.players.isNotEmpty;
+        final bool canStart = state is PlayersLoadedPA && state.players.isNotEmpty;
 
         return Column(
           children: [
-            WidgetsBuild.buildStartGameButton(
+            WidgetsPABuild.buildStartGameButton(
               onPressed: canStart ? _startGame : null,
             ),
             const SizedBox(height: 16),

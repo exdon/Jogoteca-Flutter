@@ -1,4 +1,4 @@
-class GameStateManager {
+class GameStateManagerPA {
   static final Map<String, Map<String, Set<String>>> _gameAnsweredQuestions = {};
   static final Map<String, String> _gameSuperAnonimoPlayer = {};
   // NOVO CAMPO APENAS PARA COMBINAÇÕES DO IA ANÔNIMO

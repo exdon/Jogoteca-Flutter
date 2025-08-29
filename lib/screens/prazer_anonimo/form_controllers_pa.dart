@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class FormControllers {
+class FormControllersPA {
   final TextEditingController pinController = TextEditingController();
   final TextEditingController respostaController = TextEditingController();
   final TextEditingController perguntaSuperAnonimoController = TextEditingController();

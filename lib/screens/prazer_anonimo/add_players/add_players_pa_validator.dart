@@ -1,4 +1,4 @@
-class AddPlayersValidator {
+class AddPlayersPAValidator {
   static bool isPinValid(String pin) {
     final pinReg = RegExp(r'^\d{4,6}$');
     return pinReg.hasMatch(pin);
