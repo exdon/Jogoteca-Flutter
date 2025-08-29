@@ -23,15 +23,15 @@ class PlayersBlocRP extends Bloc<PlayersEventRP, PlayersStateRP> {
     on<LoadRandomPlayerRP>((event, emit) async {
       emit(PlayersLoadingRP());
       try {
-        final lista = await service.loadPlayers(event.partidaId);
+        final list = await service.loadPlayers(event.partidaId);
         final random = Random();
-        final index = random.nextInt(lista.length);
-        final player = lista[index];
+        final index = random.nextInt(list.length);
+        final player = list[index];
 
         final playerName = player['nome'];
         final playerId = player['id'];
 
-        emit(RandomPlayerLoadedRP(playerName, playerId));
+        emit(RandomPlayerLoadedRP(playerName, playerId, list));
       } catch (e) {
         emit(PlayersErrorRP(e.toString()));
       }

@@ -3,17 +3,18 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:jogoteca/screens/prazer_anonimo/game/game_screen.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_bloc_pa.dart';
+import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_event_pa.dart';
+import 'package:jogoteca/screens/prazer_anonimo/game/prazer_anonimo_game_screen.dart';
+import 'package:jogoteca/service/prazer_anonimo/prazer_anonimo_service.dart';
 
-import '../blocs/players/players_bloc.dart';
-import '../blocs/questions/questions_bloc.dart';
-import '../blocs/questions/questions_event.dart';
 import '../service/firebase_service.dart';
 import 'matrix_code_rain.dart';
 
 class HackerTransitionScreen extends StatefulWidget {
   final String partidaId;
-  final PlayersBloc playersBloc;
+  final PlayersBlocPA playersBloc;
 
   const HackerTransitionScreen({
     super.key,
@@ -96,10 +97,10 @@ class _HackerTransitionScreenState extends State<HackerTransitionScreen>
                 BlocProvider.value(value: widget.playersBloc),
                 BlocProvider(
                   create: (_) =>
-                  QuestionsBloc(FirebaseService())..add(LoadQuestions()),
+                  QuestionsBlocPA(PrazerAnonimoService())..add(LoadQuestionsPA()),
                 ),
               ],
-              child: GameScreen(partidaId: widget.partidaId),
+              child: PrazerAnonimoGameScreen(partidaId: widget.partidaId),
             ),
           ),
         );

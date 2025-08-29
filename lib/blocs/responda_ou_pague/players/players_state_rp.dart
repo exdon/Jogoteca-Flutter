@@ -8,7 +8,8 @@ class PlayersLoadedRP extends PlayersStateRP {
 class RandomPlayerLoadedRP extends PlayersStateRP {
   final String playerName;
   final String playerId;
-  RandomPlayerLoadedRP(this.playerName, this.playerId);
+  final List<Map<String, dynamic>> allPlayers;
+  RandomPlayerLoadedRP(this.playerName, this.playerId, this.allPlayers);
 }
 class PlayerDataLoadedRP extends PlayersStateRP {
   final Map<String, dynamic> playerData;

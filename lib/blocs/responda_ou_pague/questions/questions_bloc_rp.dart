@@ -8,10 +8,15 @@ class QuestionsBlocRP extends Bloc<QuestionsEventRP, QuestionsStateRP> {
   final ResponsaOuPagueService service;
 
   QuestionsBlocRP(this.service) : super(QuestionInitialRP()) {
+
     on<LoadQuestionRP>((event, emit) async {
       emit(QuestionLoadingRP());
       try {
-        final question = await service.loadQuestion(event.classificacao);
+        final question = await service.loadQuestion(
+            event.classificacao,
+            event.answeredQuestions,
+            event.recentQuestions
+        );
         emit(QuestionLoadedRP(question));
       } catch (e) {
         emit(QuestionErrorRP(e.toString()));

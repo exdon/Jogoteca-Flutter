@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/challenges/challenges_bloc_rp.dart';
@@ -10,6 +12,7 @@ import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_bloc_rp.dar
 import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_event_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_state_rp.dart';
 import 'package:jogoteca/constants/app_constants.dart';
+import 'package:jogoteca/constants/responda_ou_pague/responda_ou_pague_constants.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 
 enum GameStep {
@@ -35,6 +38,12 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
   String? selectedCategory;
   Map<String, dynamic>? currentQuestion;
   Map<String, dynamic>? currentChallenge;
+  List<Map<String, dynamic>>? allPlayers; // Lista de todos os jogadores
+
+  Map<String, Set<String>> playersAnsweredQuestions = {}; // Chave: playerId, Valor: Set de question IDs
+  Map<String, Set<String>> playersCompletedChallenges = {}; // Chave: playerId, Valor: Set de challenge IDs
+  Set<String> recentlyUsedQuestions = {}; // IDs das perguntas usadas recentemente
+  Set<String> recentlyUsedChallenges = {}; // IDs dos desafios usados recentemente
 
   @override
   void initState() {
@@ -51,6 +60,7 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
       selectedCategory = null;
       currentQuestion = null;
       currentChallenge = null;
+      allPlayers = null;
     });
 
     // Reset dos BLoCs
@@ -65,6 +75,34 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
     });
   }
 
+  // Função para substituir {player} por um nome aleatório
+  String _replacePlayerPlaceholder(String text) {
+    if (!text.contains('{player}')) {
+      return text;
+    }
+
+    if (allPlayers == null || allPlayers!.length <= 1) {
+      // Se não há outros jogadores, remove o placeholder
+      return text.replaceAll('{player}', 'outro jogador');
+    }
+
+    // Filtra jogadores diferentes do atual
+    final otherPlayers = allPlayers!.where((player) =>
+    player['id'] != currentPlayerId
+    ).toList();
+
+    if (otherPlayers.isEmpty) {
+      return text.replaceAll('{player}', 'outro jogador');
+    }
+
+    // Seleciona um jogador aleatório
+    final random = Random();
+    final randomPlayer = otherPlayers[random.nextInt(otherPlayers.length)];
+    final randomPlayerName = randomPlayer['nome'] ?? 'outro jogador';
+
+    return text.replaceAll('{player}', randomPlayerName);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +111,8 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
         disablePartida: true,
         deletePartida: true,
         partidaId: widget.partidaId,
+        gameId: RespondaOuPagueConstants.gameId,
+        database: RespondaOuPagueConstants.dbPartidas,
       ),
       body: Stack(
         children: [
@@ -122,6 +162,7 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
           setState(() {
             currentPlayerName = state.playerName;
             currentPlayerId = state.playerId;
+            allPlayers = state.allPlayers;
             currentStep = GameStep.selectCategory;
           });
         } else if (state is PlayersErrorRP) {
@@ -254,7 +295,14 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
             ),
             onPressed: () {
-              context.read<QuestionsBlocRP>().add(LoadQuestionRP(selectedCategory!));
+              // Pega perguntas já respondidas pelo jogador atual
+              final playerQuestions = playersAnsweredQuestions[currentPlayerId] ?? <String>{};
+
+              context.read<QuestionsBlocRP>().add(LoadQuestionRP(
+                  selectedCategory!,
+                  playerQuestions.toList(),
+                  recentlyUsedQuestions.toList()
+              ));
               context.read<PlayersBlocRP>().add(LoadPlayerDataRP(widget.partidaId, currentPlayerId!));
               setState(() {
                 currentStep = GameStep.showQuestion;
@@ -429,6 +477,15 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
             if (state is QuestionLoadedRP) {
               setState(() {
                 currentQuestion = state.question;
+                // Adiciona aos recentes para evitar repetição imediata
+                final questionId = state.question['id']?.toString();
+                if (questionId != null) {
+                  recentlyUsedQuestions.add(questionId);
+                  // Limita a 10 perguntas recentes
+                  if (recentlyUsedQuestions.length > 10) {
+                    recentlyUsedQuestions.remove(recentlyUsedQuestions.first);
+                  }
+                }
               });
             } else if (state is QuestionErrorRP) {
               _showErrorSnackBar("Erro ao carregar pergunta: ${state.message}");
@@ -447,7 +504,8 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                 return _buildLoading("Preparando pergunta...");
               }
 
-              final question = currentQuestion!['pergunta'] ?? 'Pergunta não encontrada';
+              final questionText = currentQuestion!['pergunta'] ?? 'Pergunta não encontrada';
+              final question = _replacePlayerPlaceholder(questionText);
 
               return Column(
                 children: [
@@ -476,6 +534,14 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 12),
                           ),
                           onPressed: () {
+                            // Adiciona pergunta ao histórico do jogador atual
+                            final questionId = currentQuestion?['id']?.toString();
+                            if (questionId != null && currentPlayerId != null) {
+                              if (!playersAnsweredQuestions.containsKey(currentPlayerId!)) {
+                                playersAnsweredQuestions[currentPlayerId!] = <String>{};
+                              }
+                              playersAnsweredQuestions[currentPlayerId!]!.add(questionId);
+                            }
                             _resetGame();
                           },
                           child: const Row(
@@ -498,7 +564,14 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 115, vertical: 12),
                           ),
                           onPressed: () {
-                            context.read<ChallengesBlocRP>().add(LoadChallengeRP(selectedCategory!));
+                            // Pega desafios já completados pelo jogador atual
+                            final playerChallenges = playersCompletedChallenges[currentPlayerId] ?? <String>{};
+
+                            context.read<ChallengesBlocRP>().add(LoadChallengeRP(
+                                selectedCategory!,
+                                playerChallenges.toList(),
+                                recentlyUsedChallenges.toList()
+                            ));
                             setState(() {
                               currentStep = GameStep.showChallenge;
                             });
@@ -541,6 +614,15 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
             if (state is ChallengeLoadedRP) {
               setState(() {
                 currentChallenge = state.challenge;
+                // Adiciona aos recentes
+                final challengeId = state.challenge['id']?.toString();
+                if (challengeId != null) {
+                  recentlyUsedChallenges.add(challengeId);
+                  // Limita a 10 desafios recentes
+                  if (recentlyUsedChallenges.length > 10) {
+                    recentlyUsedChallenges.remove(recentlyUsedChallenges.first);
+                  }
+                }
               });
             } else if (state is ChallengeErrorRP) {
               _showErrorSnackBar("Erro ao carregar desafio: ${state.message}");
@@ -559,7 +641,8 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                 return _buildLoading("Preparando desafio...");
               }
 
-              final challenge = currentChallenge!['desafio'] ?? 'Desafio não encontrado';
+              final challengeText = currentChallenge!['desafio'] ?? 'Desafio não encontrado';
+              final challenge = _replacePlayerPlaceholder(challengeText);
 
               return Column(
                 children: [
@@ -593,6 +676,14 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 70, vertical: 12),
                           ),
                           onPressed: () {
+                            // Adiciona desafio ao histórico do jogador atual
+                            final challengeId = currentChallenge?['id']?.toString();
+                            if (challengeId != null && currentPlayerId != null) {
+                              if (!playersCompletedChallenges.containsKey(currentPlayerId!)) {
+                                playersCompletedChallenges[currentPlayerId!] = <String>{};
+                              }
+                              playersCompletedChallenges[currentPlayerId!]!.add(challengeId);
+                            }
                             _resetGame();
                           },
                           child: const Row(

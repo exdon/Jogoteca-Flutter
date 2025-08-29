@@ -8,10 +8,15 @@ class ChallengesBlocRP extends Bloc<ChallengesEventRP, ChallengesStateRP> {
   final ResponsaOuPagueService service;
 
   ChallengesBlocRP(this.service) : super(ChallengeInitialRP()) {
+
     on<LoadChallengeRP>((event, emit) async {
       emit(ChallengeLoadingRP());
       try {
-        final challenge = await service.loadChallenge(event.classificacao);
+        final challenge = await service.loadChallenge(
+            event.classificacao,
+            event.completedChallenges,
+            event.recentChallenges
+        );
         emit(ChallengeLoadedRP(challenge));
       } catch (e) {
         emit(ChallengeErrorRP(e.toString()));

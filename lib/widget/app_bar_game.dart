@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:jogoteca/screens/home/home_screen.dart';
-import 'package:jogoteca/service/firebase_service.dart';
+import 'package:jogoteca/shared/service/shared_service.dart';
 
 class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
   final bool disablePartida;
   final bool deletePartida;
-  final String? partidaId;
+  final String partidaId;
+  final String gameId;
+  final String database;
 
   const AppBarGame({
     super.key,
     required this.disablePartida,
-    this.partidaId,
+    required this.partidaId,
     required this.deletePartida,
+    required this.gameId,
+    required this.database
 });
 
   Future<void> _encerrarPartida(BuildContext context) async {
     final confirmar = await _mostrarDialogoConfirmacao(context);
     if (confirmar == true && context.mounted) {
 
-      if (partidaId != null && partidaId!.isNotEmpty) {
+      if (partidaId.isNotEmpty) {
         if (deletePartida) {
           try {
-            await FirebaseService().deletePartida(partidaId!);
+            await SharedService(gameId: gameId, database: database, partidaId: partidaId)
+                .deletePartida();
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -31,7 +36,8 @@ class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
           }
         } else if (disablePartida) {
           try {
-            await FirebaseService().setPartidaAtiva(partidaId!, false);
+            await SharedService(gameId: gameId, database: database, partidaId: partidaId)
+                .setPartidaAtiva(false);
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

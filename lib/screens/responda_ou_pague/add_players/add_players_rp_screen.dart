@@ -6,10 +6,12 @@ import 'package:jogoteca/blocs/responda_ou_pague/players/players_event_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/players/players_state_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_bloc_rp.dart';
 import 'package:jogoteca/constants/app_constants.dart';
+import 'package:jogoteca/constants/responda_ou_pague/responda_ou_pague_constants.dart';
 import 'package:jogoteca/screens/responda_ou_pague/add_players/add_players_rp_validator.dart';
 import 'package:jogoteca/screens/responda_ou_pague/add_players/widgets_rp_build.dart';
 import 'package:jogoteca/screens/responda_ou_pague/game/responda_ou_pague_game_screen.dart';
 import 'package:jogoteca/service/responda_ou_pague/responsa_ou_pague_service.dart';
+import 'package:jogoteca/shared/service/shared_service.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 import 'package:jogoteca/widget/responda_ou_pague/game_intro_screen.dart';
@@ -33,6 +35,11 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
     super.initState();
 
     context.read<PlayersBlocRP>().add(LoadPlayersRP(widget.partidaId));
+    SharedService(
+      gameId: RespondaOuPagueConstants.gameId,
+      database: RespondaOuPagueConstants.dbPartidas,
+      partidaId: widget.partidaId,
+    ).setPartidaAtiva(true);
   }
 
 
@@ -126,7 +133,13 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBarGame(disablePartida: true, deletePartida: true, partidaId: widget.partidaId),
+      appBar: AppBarGame(
+        disablePartida: true,
+        deletePartida: true,
+        partidaId: widget.partidaId,
+        gameId: RespondaOuPagueConstants.gameId,
+        database: RespondaOuPagueConstants.dbPartidas,
+      ),
       body: BlocListener<PlayersBlocRP, PlayersStateRP>(
         listener: (context, state) {
           if (state is PlayersErrorRP) {
@@ -201,7 +214,7 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
         } else if (state is PlayersLoadedRP) {
           return WidgetsRPBuild.buildPlayersList(players: state.players);
         } else if (state is PlayersErrorRP) {
-          return Center(child: Text('Erro: ${state.message}'));
+          return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
         } else {
           return const SizedBox.shrink();
         }

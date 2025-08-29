@@ -5,6 +5,7 @@ class AppConstants {
   static const String defaultGameImage = 'images/espiao.jpg';
   static const String prazerAnonimoImage = 'images/prazer_anonimo_banner.png';
   static const String respondaOuPagueImage = 'images/rp_banner_cut.png';
+  static const String contraOTempoImage = 'images/ct_banner.png';
   static const String appBuildingImage = 'images/app_building.png';
   static const String backgroundPrazerAnonimo = 'images/background_anonimo.jpg';
   static const String backgroundRespondaOuPague = 'images/rp_background.png';
@@ -13,6 +14,8 @@ class AppConstants {
   static const String rpDemonTransition = 'images/demon.png';
   static const String lottieFuturisticParticles = 'assets/lottie/futuristic_particles.json';
   static const String lottieThunder = 'assets/lottie/thunder.json';
+  static const String bipSound = 'sounds/bip.wav';
+  static const String alarmClockSound = 'sounds/alarm_clock.wav';
 
   // Textos
   static const String attentionTitle = 'ATENÇÃO!';
