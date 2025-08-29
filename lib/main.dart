@@ -1,19 +1,15 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jogoteca/screens/home/home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+const supabaseUrl = 'https://akhubhfmewzivdyogsmj.supabase.co';
+final supabaseKey = dotenv.env['SUPABASE_KEY']!;
 
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: 'AIzaSyCzqad8a16MeT6NM5SaCcL1UMAxML9ls-k',
-      appId: 'id',
-      messagingSenderId: 'sendid',
-      projectId: 'jogoteca-exdon',
-      storageBucket: 'jogoteca-exdon.firebasestorage.app',
-    ),
-  );
+Future<void> main() async {
+  await dotenv.load(fileName: 'supabase.env');
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
   runApp(const MyApp());
 }
