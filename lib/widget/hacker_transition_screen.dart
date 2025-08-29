@@ -9,7 +9,6 @@ import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_event_pa.dart'
 import 'package:jogoteca/screens/prazer_anonimo/game/prazer_anonimo_game_screen.dart';
 import 'package:jogoteca/service/prazer_anonimo/prazer_anonimo_service.dart';
 
-import '../service/firebase_service.dart';
 import 'matrix_code_rain.dart';
 
 class HackerTransitionScreen extends StatefulWidget {
