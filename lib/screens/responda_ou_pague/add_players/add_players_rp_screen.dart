@@ -29,6 +29,7 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
   bool isAdding = false;
   final _nomeController = TextEditingController();
   String nomeJogador = '';
+  bool jogadorFoiAdicionado = false;
 
   @override
   void initState() {
@@ -74,6 +75,7 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
       context.read<PlayersBlocRP>().add(
         AddPlayerRP(widget.partidaId, nome),
       );
+      jogadorFoiAdicionado = true;
     } catch (e) {
       SharedFunctions.showSnackMessage(
         message: 'Erro ao salvar jogador ${SharedFunctions.capitalize(nome)} - $e',
@@ -148,13 +150,14 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
                 mounted: mounted,
                 context: context
             );
-          } else if (state is PlayersLoadedRP) {
+          } else if (state is PlayersLoadedRP && jogadorFoiAdicionado) {
             if (state.players.isNotEmpty) {
               SharedFunctions.showSnackMessage(
                   message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
                   mounted: mounted,
                   context: context
               );
+              jogadorFoiAdicionado = false;
             }
           }
         },

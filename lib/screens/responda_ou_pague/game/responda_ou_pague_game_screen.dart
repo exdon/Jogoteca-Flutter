@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_fortune_wheel/flutter_fortune_wheel.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/challenges/challenges_bloc_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/challenges/challenges_event_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/challenges/challenges_state_rp.dart';
@@ -45,13 +48,27 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
   Set<String> recentlyUsedQuestions = {}; // IDs das perguntas usadas recentemente
   Set<String> recentlyUsedChallenges = {}; // IDs dos desafios usados recentemente
 
+  StreamController<int?> selectedPlayerController = StreamController<int?>.broadcast();
+  bool isSpinning = false;
+  int? selectedIndex;
+
   @override
   void initState() {
     super.initState();
+    context.read<PlayersBlocRP>().add(LoadPlayersRP(widget.partidaId));
     _resetGame();
   }
 
+  @override
+  void dispose() {
+    selectedPlayerController.close();
+    super.dispose();
+  }
+
+
   void _resetGame() {
+    _clearWheelSelection();
+
     setState(() {
       currentStep = GameStep.generatePlayer;
       currentPlayerName = null;
@@ -60,12 +77,18 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
       selectedCategory = null;
       currentQuestion = null;
       currentChallenge = null;
-      allPlayers = null;
+      selectedIndex = null;
+      isSpinning = false;
     });
 
     // Reset dos BLoCs
+    context.read<PlayersBlocRP>().add(LoadPlayersRP(widget.partidaId));
     context.read<QuestionsBlocRP>().add(ResetQuestionRP());
     context.read<ChallengesBlocRP>().add(ResetChallengeRP());
+  }
+
+  void _clearWheelSelection() {
+    selectedPlayerController.add(null); // limpa o valor emitido
   }
 
   void _updateLives(int newLives) {
@@ -158,12 +181,9 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
   Widget _buildGeneratePlayerStep() {
     return BlocListener<PlayersBlocRP, PlayersStateRP>(
       listener: (context, state) {
-        if (state is RandomPlayerLoadedRP) {
+        if (state is PlayersLoadedRP) {
           setState(() {
-            currentPlayerName = state.playerName;
-            currentPlayerId = state.playerId;
-            allPlayers = state.allPlayers;
-            currentStep = GameStep.selectCategory;
+            allPlayers = state.players;
           });
         } else if (state is PlayersErrorRP) {
           _showErrorSnackBar("Erro ao carregar jogadores: ${state.message}");
@@ -171,19 +191,13 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
       },
       child: BlocBuilder<PlayersBlocRP, PlayersStateRP>(
         builder: (context, state) {
-          if (state is PlayersLoadingRP) {
-            return _buildLoading("Sorteando jogador...");
+          if (state is PlayersLoadingRP || allPlayers == null) {
+            return _buildLoading("Carregando jogadores...");
           }
 
           return Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.person_search,
-                size: 64,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 20),
               const Text(
                 'Bem-vindo(a) ao',
                 style: TextStyle(
@@ -202,7 +216,35 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 50),
+              SizedBox(
+                height: 300,
+                child: FortuneWheel(
+                  selected: selectedPlayerController.stream.where((value) => value != null).cast<int>(),
+                  items: allPlayers!.map((player) {
+                    return FortuneItem(
+                      child: Text(
+                        player['nome'],
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                  animateFirst: false,
+                  onAnimationEnd: () {
+                    if (selectedIndex != null) {
+                      final selectedPlayer = allPlayers![selectedIndex!];
+                      setState(() {
+                        currentPlayerName = selectedPlayer['nome'];
+                        currentPlayerId = selectedPlayer['id'];
+                        currentStep = GameStep.selectCategory;
+                        isSpinning = false;
+                        selectedIndex = null;
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 30),
               const Text(
                 'Clique no botão abaixo para sortear um jogador e iniciar o jogo.',
                 style: TextStyle(
@@ -211,26 +253,33 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 80),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                ),
-                onPressed: () {
-                  context.read<PlayersBlocRP>().add(LoadRandomPlayerRP(widget.partidaId));
-                },
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.shuffle),
-                    SizedBox(width: 8),
-                    Text(
-                      'Sortear Jogador',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ],
+              const SizedBox(height: 50),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                  onPressed: isSpinning
+                      ? null
+                      : () {
+                    final index = Random().nextInt(allPlayers!.length);
+                    selectedIndex = index; // salva o índice sorteado
+                    selectedPlayerController.add(index);
+                    setState(() {
+                      isSpinning = true;
+                    });
+                  },
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Girar', style: TextStyle(fontSize: 22)),
+                      SizedBox(width: 8),
+                      FaIcon(FontAwesomeIcons.arrowsRotate),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -239,6 +288,7 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
       ),
     );
   }
+
 
   // PASSO 2: Selecionar Categoria
   Widget _buildSelectCategoryStep() {
@@ -288,36 +338,39 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
         ),
         if (selectedCategory != null) ...[
           const SizedBox(height: 80),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _getColor(selectedCategory!),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
-            ),
-            onPressed: () {
-              // Pega perguntas já respondidas pelo jogador atual
-              final playerQuestions = playersAnsweredQuestions[currentPlayerId] ?? <String>{};
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _getColor(selectedCategory!),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 16),
+              ),
+              onPressed: () {
+                // Pega perguntas já respondidas pelo jogador atual
+                final playerQuestions = playersAnsweredQuestions[currentPlayerId] ?? <String>{};
 
-              context.read<QuestionsBlocRP>().add(LoadQuestionRP(
-                  selectedCategory!,
-                  playerQuestions.toList(),
-                  recentlyUsedQuestions.toList()
-              ));
-              context.read<PlayersBlocRP>().add(LoadPlayerDataRP(widget.partidaId, currentPlayerId!));
-              setState(() {
-                currentStep = GameStep.showQuestion;
-              });
-            },
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.play_arrow),
-                SizedBox(width: 8),
-                Text(
-                  'Iniciar Jogo',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ],
+                context.read<QuestionsBlocRP>().add(LoadQuestionRP(
+                    selectedCategory!,
+                    playerQuestions.toList(),
+                    recentlyUsedQuestions.toList()
+                ));
+                context.read<PlayersBlocRP>().add(LoadPlayerDataRP(widget.partidaId, currentPlayerId!));
+                setState(() {
+                  currentStep = GameStep.showQuestion;
+                });
+              },
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.play_arrow),
+                  SizedBox(width: 8),
+                  Text(
+                    'Iniciar Jogo',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
