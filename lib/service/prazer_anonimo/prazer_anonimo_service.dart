@@ -283,6 +283,7 @@ class PrazerAnonimoService {
       String destinatarioId,
       String desafio,
       String remetenteNome,
+      String desafioPara,
       ) async {
     await _supabase
         .from('pa_super_anonimo_challenges')
@@ -293,7 +294,7 @@ class PrazerAnonimoService {
       'destinatario_id': destinatarioId,
       'remetente_nome': remetenteNome,
       'desafio': desafio,
-      'respondida': false,
+      'challenge_to': desafioPara,
       'created_at': DateTime.now().toIso8601String(),
     });
   }
@@ -305,7 +306,7 @@ class PrazerAnonimoService {
         .eq('game_id', gameId)
         .eq('partida_id', partidaId)
         .eq('destinatario_id', jogadorId)
-        .eq('respondida', false)
+        // .eq('respondida', false)
         .order('created_at');
 
     return List<Map<String, dynamic>>.from(response);

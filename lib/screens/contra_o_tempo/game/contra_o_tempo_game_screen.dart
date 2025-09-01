@@ -41,6 +41,9 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
   bool showingOptions = false;
   bool optionSelected = false;
   bool answeredCorrectly = false;
+  final TextEditingController _answerController = TextEditingController();
+  String userAnswer = '';
+  bool answerSubmitted = false;
 
   late final TimerSoundManager _soundManager;
 
@@ -69,6 +72,7 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
     gameTimer?.cancel();
     _timerController.dispose();
     _soundManager.dispose();
+    _answerController.dispose();
     super.dispose();
   }
 
@@ -101,6 +105,9 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
     optionSelected = false;
     answeredCorrectly = false;
     selectedOption = null;
+    _answerController.clear();
+    userAnswer = '';
+    answerSubmitted = false;
     gameTimer?.cancel();
     _timerController.reset();
     _timerController.forward();
@@ -173,13 +180,85 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
     }
   }
 
+  void _validateAnswer() {
+    if (answerSubmitted || timeUp) return;
+
+    gameTimer?.cancel();
+    _timerController.stop();
+    _soundManager.stopAll();
+
+    final currentQuestion = availableQuestions[currentQuestionIndex];
+    final correctAnswer = currentQuestion['resposta']?.toString() ?? '';
+
+    // Função para normalizar texto (remover acentos e converter para minúscula)
+    String normalizeText(String text) {
+      return text
+          .toLowerCase()
+          .trim()
+          .replaceAll('á', 'a')
+          .replaceAll('à', 'a')
+          .replaceAll('ã', 'a')
+          .replaceAll('â', 'a')
+          .replaceAll('ä', 'a')
+          .replaceAll('é', 'e')
+          .replaceAll('è', 'e')
+          .replaceAll('ê', 'e')
+          .replaceAll('ë', 'e')
+          .replaceAll('í', 'i')
+          .replaceAll('ì', 'i')
+          .replaceAll('î', 'i')
+          .replaceAll('ï', 'i')
+          .replaceAll('ó', 'o')
+          .replaceAll('ò', 'o')
+          .replaceAll('ô', 'o')
+          .replaceAll('õ', 'o')
+          .replaceAll('ö', 'o')
+          .replaceAll('ú', 'u')
+          .replaceAll('ù', 'u')
+          .replaceAll('û', 'u')
+          .replaceAll('ü', 'u')
+          .replaceAll('ç', 'c')
+          .replaceAll('ñ', 'n');
+    }
+
+    final normalizedCorrectAnswer = normalizeText(correctAnswer);
+    final normalizedUserAnswer = normalizeText(userAnswer);
+
+    // Verifica se é resposta exata ou se a resposta do usuário está contida na resposta correta
+    bool isCorrect = false;
+
+    if (normalizedUserAnswer == normalizedCorrectAnswer) {
+      // Resposta exata
+      isCorrect = true;
+    } else if (normalizedCorrectAnswer.contains(normalizedUserAnswer) && normalizedUserAnswer.length >= 3) {
+      // Resposta parcial (mínimo 3 caracteres para evitar coincidências)
+      isCorrect = true;
+    }
+
+    setState(() {
+      answerSubmitted = true;
+      answeredCorrectly = isCorrect;
+      if (isCorrect) {
+        showAnswer = true;
+      }
+    });
+
+    if (isCorrect) {
+      // Se respondeu corretamente, move para perguntas respondidas corretamente
+      correctAnsweredQuestions.add(currentQuestion);
+    } else {
+      // Se errou, apenas move para usadas (pode aparecer novamente)
+      usedQuestions.add(currentQuestion);
+    }
+  }
+
   void _nextPlayer(List<Map<String, dynamic>> players) {
     // Remove pergunta atual da lista de disponíveis
     if (currentQuestionIndex < availableQuestions.length) {
       final currentQuestion = availableQuestions[currentQuestionIndex];
       final bool hasOptions = GameHelperCT.getHasOptions(currentQuestion);
 
-      final bool shouldRemove = (!hasOptions && showAnswer) || (hasOptions && answeredCorrectly);
+      final bool shouldRemove = (!hasOptions && answerSubmitted && answeredCorrectly) || (hasOptions && answeredCorrectly);
 
       if (shouldRemove) {
         availableQuestions.removeAt(currentQuestionIndex);
@@ -199,6 +278,9 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
       optionSelected = false;
       answeredCorrectly = false;
       selectedOption = null;
+      _answerController.clear();
+      userAnswer = '';
+      answerSubmitted = false;
     });
 
     _selectRandomQuestion();
@@ -230,6 +312,9 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
       optionSelected = false;
       answeredCorrectly = false;
       selectedOption = null;
+      _answerController.clear();
+      userAnswer = '';
+      answerSubmitted = false;
     });
     _selectRandomQuestion();
 
@@ -587,6 +672,72 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
   }
 
   Widget _buildAnswerArea(Map<String, dynamic> question, bool hasOptions) {
+    if (!hasOptions && !timeUp && !answerSubmitted) {
+      // Mostrar campo de input e botão validar
+      return Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _answerController,
+              onChanged: (value) {
+                setState(() {
+                  userAnswer = value;
+                });
+              },
+              decoration: const InputDecoration(
+                hintText: 'Digite sua resposta...',
+                border: InputBorder.none,
+                hintStyle: TextStyle(color: Colors.grey),
+              ),
+              style: const TextStyle(
+                color: Color(0xFF2C3E50),
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: userAnswer.trim().isEmpty ? null : _validateAnswer,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: userAnswer.trim().isEmpty
+                    ? Colors.grey
+                    : Colors.white,
+                foregroundColor: const Color(0xFF2E7BD6),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              child: const Text(
+                'VALIDAR RESPOSTA',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     if (!hasOptions && showAnswer) {
       return Center(
         child: Container(
@@ -629,47 +780,16 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
     final bool hasOptions = currentQuestion != null && GameHelperCT.getHasOptions(currentQuestion);
 
     // Se tem opções e uma foi selecionada, ou se o tempo acabou
-    if ((hasOptions && optionSelected) || timeUp) {
+    if ((hasOptions && optionSelected) || timeUp || (!hasOptions && answerSubmitted)) {
       return _buildResultSection(players);
     }
 
     // Se não tem opções e a resposta foi mostrada
-    if (!hasOptions && showAnswer) {
+    if (!hasOptions && answerSubmitted) {
       return _buildNextButton(players);
     }
 
-    // Se não tem opções e ainda não mostrou a resposta
-    if (!hasOptions && !timeUp) {
-      return _buildRevealButton();
-    }
-
     return const SizedBox.shrink();
-  }
-
-  Widget _buildRevealButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _showAnswer,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF2E7BD6),
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-        ),
-        child: const Text(
-          'VER RESPOSTA',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildNextButton(List<Map<String, dynamic>> players) {
@@ -708,7 +828,7 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
       message = 'Oh não!\nTempo esgotado!';
       resultColor = const Color(0xFFFF4757);
       resultIcon = Icons.close;
-    } else if (optionSelected) {
+    } else if (optionSelected || answerSubmitted) {
       if (answeredCorrectly) {
         message = 'Parabéns!\nResposta correta!';
         resultColor = const Color(0xFF2ECC71);

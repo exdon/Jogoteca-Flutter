@@ -170,6 +170,7 @@ class PlayersBlocPA extends Bloc<PlayersEventPA, PlayersStatePA> {
           event.destinatarioId,
           event.desafio,
           remetenteNome,
+          event.desafioPara
         );
       } catch (e) {
         emit(PlayersErrorPA(e.toString()));

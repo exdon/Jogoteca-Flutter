@@ -6,6 +6,7 @@ import 'package:jogoteca/blocs/prazer_anonimo/players/players_state_pa.dart';
 import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_bloc_pa.dart';
 import 'package:jogoteca/blocs/prazer_anonimo/questions/questions_state_pa.dart';
 import 'package:jogoteca/constants/prazer_anonimo/prazer_anonimo_constants.dart';
+import 'package:jogoteca/guards/game_pop_guard.dart';
 import 'package:jogoteca/screens/prazer_anonimo/form_controllers_pa.dart';
 import 'package:jogoteca/screens/prazer_anonimo/game/dialog_helper.dart';
 import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager_pa.dart';
@@ -254,6 +255,7 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
                       jogadorId,
                       player['id'],
                       desafio,
+                      'Todos'
                     ),
                   );
                 }
@@ -269,17 +271,18 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
                 'isChallenge': true,
               });
             } else if (_formControllers.challengeTarget == 'one') {
+              final destId = _formControllers.getSelectedChallengePlayer1()!;
+              final destName = _players.firstWhere((p) => p['id'] == destId)['nome'];
+
               playersBloc.add(
                 SendSuperAnonimoChallengePA(
                   widget.partidaId,
                   jogadorId,
                   _formControllers.getSelectedChallengePlayer1()!,
                   desafio,
+                  destName
                 ),
               );
-
-              final destId = _formControllers.getSelectedChallengePlayer1()!;
-              final destName = _players.firstWhere((p) => p['id'] == destId)['nome'];
 
               // Adiciona card de desafio nos resultados da rodada
               _roundManager.addRoundResult({
@@ -294,6 +297,12 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
               final dest1Id = _formControllers.getSelectedChallengePlayer1()!;
               final dest1Name = _players.firstWhere((p) => p['id'] == dest1Id)['nome'];
 
+              final dest2Id = _formControllers.getSelectedChallengePlayer2()!;
+              final dest2Name = _players.firstWhere((p) => p['id'] == dest2Id)['nome'];
+
+              // Cria um único card com os dois nomes
+              final nomesCombinados = '$dest1Name e $dest2Name';
+
               // Envia desafio para o primeiro jogador
               playersBloc.add(
                 SendSuperAnonimoChallengePA(
@@ -301,11 +310,11 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
                   jogadorId,
                   dest1Id,
                   desafio,
+                  nomesCombinados
                 ),
               );
 
-              final dest2Id = _formControllers.getSelectedChallengePlayer2()!;
-              final dest2Name = _players.firstWhere((p) => p['id'] == dest2Id)['nome'];
+
               // Envia desafio para o segundo jogador
               playersBloc.add(
                 SendSuperAnonimoChallengePA(
@@ -313,11 +322,10 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
                   jogadorId,
                   dest2Id,
                   desafio,
+                  nomesCombinados
                 ),
               );
 
-              // Cria um único card com os dois nomes
-              final nomesCombinados = '$dest1Name e $dest2Name';
               _roundManager.addRoundResult({
                 'jogadorId': 'desafio',
                 'jogadorNome': 'Desafio para: $nomesCombinados',
@@ -483,108 +491,113 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBarGame(
-        disablePartida: true, 
-        deletePartida: false, 
-        partidaId: widget.partidaId, 
-        gameId: PrazerAnonimoConstants.gameId,
-        database: PrazerAnonimoConstants.dbPartidas,
-      ),
-      body: BlocListener<PlayersBlocPA, PlayersStatePA>(
-        listener: (context, state) {
-          if ((state is PlayersLoadedWithMessagesPA || state is PlayersLoadedWithMessagesAndSA) &&
-              _players.isNotEmpty &&
-              indice < _players.length) {
+    return GamePopGuard(
+      partidaId: widget.partidaId,
+      gameId: PrazerAnonimoConstants.gameId,
+      database: PrazerAnonimoConstants.dbPartidas,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBarGame(
+          disablePartida: true,
+          deletePartida: false,
+          partidaId: widget.partidaId,
+          gameId: PrazerAnonimoConstants.gameId,
+          database: PrazerAnonimoConstants.dbPartidas,
+        ),
+        body: BlocListener<PlayersBlocPA, PlayersStatePA>(
+          listener: (context, state) {
+            if ((state is PlayersLoadedWithMessagesPA || state is PlayersLoadedWithMessagesAndSA) &&
+                _players.isNotEmpty &&
+                indice < _players.length) {
 
-            final jogadorAtualId = _players[indice]['id'];
+              final jogadorAtualId = _players[indice]['id'];
 
-            if (_directsLoadedFor != jogadorAtualId) {
-              return;
-            }
-
-            final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
-                ? state.directMessages
-                : (state as PlayersLoadedWithMessagesPA).directMessages;
-
-            final unread = mensagens
-                .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
-                .toList();
-
-            setState(() {
-              hasDirectMessages = unread.isNotEmpty;
-              directMessages = unread;
-              // SA questions pendentes (somente no novo estado)
-              if (state is PlayersLoadedWithMessagesAndSA) {
-                superAnonimoQuestions = state.superAnonimoQuestions;
-              } else {
-                superAnonimoQuestions = [];
+              if (_directsLoadedFor != jogadorAtualId) {
+                return;
               }
-            });
 
-            // Atualiza controllers com as SA pendentes
-            _formControllers.setPendingSAQuestions(superAnonimoQuestions);
-          }
-        },
-        child: Stack(
-          children: [
-            // Fundo
-            Positioned.fill(
-              child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
-            ),
-            // Overlay escuro
-            Positioned.fill(
-              child: Container(color: Colors.black.withOpacity(0.4)),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                top: kToolbarHeight + MediaQuery.of(context).padding.top + 10,
-                left: 16,
-                right: 16,
-                bottom: 16,
+              final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
+                  ? state.directMessages
+                  : (state as PlayersLoadedWithMessagesPA).directMessages;
+
+              final unread = mensagens
+                  .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
+                  .toList();
+
+              setState(() {
+                hasDirectMessages = unread.isNotEmpty;
+                directMessages = unread;
+                // SA questions pendentes (somente no novo estado)
+                if (state is PlayersLoadedWithMessagesAndSA) {
+                  superAnonimoQuestions = state.superAnonimoQuestions;
+                } else {
+                  superAnonimoQuestions = [];
+                }
+              });
+
+              // Atualiza controllers com as SA pendentes
+              _formControllers.setPendingSAQuestions(superAnonimoQuestions);
+            }
+          },
+          child: Stack(
+            children: [
+              // Fundo
+              Positioned.fill(
+                child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
               ),
-              child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(
-                builder: (context, playersState) {
-                  if (playersState is PlayersLoadedPA ||
-                      playersState is PlayersLoadedWithMessagesPA ||
-                      playersState is PlayersLoadedWithMessagesAndSA) {
-
-                    final currentPlayers =
-                    playersState is PlayersLoadedPA
-                        ? playersState.players
-                        : playersState is PlayersLoadedWithMessagesPA
-                        ? playersState.players
-                        : (playersState as PlayersLoadedWithMessagesAndSA).players;
-
-                    _players = List<Map<String, dynamic>>.from(currentPlayers);
-                    // Ordena pelo campo 'indice' (crescente)
-                    _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
-
-                    return BlocBuilder<QuestionsBlocPA, QuestionsStatePA>(
-                      builder: (context, questionsState) {
-                        if (questionsState is QuestionsLoadedPA) {
-                          return _buildGameContent(questionsState.questions);
-                        } else if (questionsState is QuestionsLoadingPA || questionsState is QuestionsInitialPA) {
-                          return const Center(child: CircularProgressIndicator());
-                        } else if (questionsState is QuestionsErrorPA) {
-                          return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
-                        } else {
-                          return const SizedBox.shrink();
-                        }
-                      },
-                    );
-                  } else if (playersState is PlayersLoadingPA) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (playersState is PlayersErrorPA) {
-                    return Center(child: Text("Erro ao carregar jogadores: ${playersState.message}", style: TextStyle(color: Colors.white)));
-                  } else {
-                    return const SizedBox.shrink();
-                  }
-                },
+              // Overlay escuro
+              Positioned.fill(
+                child: Container(color: Colors.black.withOpacity(0.4)),
               ),
-            ),
-          ],
+              Padding(
+                padding: EdgeInsets.only(
+                  top: kToolbarHeight + MediaQuery.of(context).padding.top + 10,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                ),
+                child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(
+                  builder: (context, playersState) {
+                    if (playersState is PlayersLoadedPA ||
+                        playersState is PlayersLoadedWithMessagesPA ||
+                        playersState is PlayersLoadedWithMessagesAndSA) {
+
+                      final currentPlayers =
+                      playersState is PlayersLoadedPA
+                          ? playersState.players
+                          : playersState is PlayersLoadedWithMessagesPA
+                          ? playersState.players
+                          : (playersState as PlayersLoadedWithMessagesAndSA).players;
+
+                      _players = List<Map<String, dynamic>>.from(currentPlayers);
+                      // Ordena pelo campo 'indice' (crescente)
+                      _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
+
+                      return BlocBuilder<QuestionsBlocPA, QuestionsStatePA>(
+                        builder: (context, questionsState) {
+                          if (questionsState is QuestionsLoadedPA) {
+                            return _buildGameContent(questionsState.questions);
+                          } else if (questionsState is QuestionsLoadingPA || questionsState is QuestionsInitialPA) {
+                            return const Center(child: CircularProgressIndicator());
+                          } else if (questionsState is QuestionsErrorPA) {
+                            return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
+                          } else {
+                            return const SizedBox.shrink();
+                          }
+                        },
+                      );
+                    } else if (playersState is PlayersLoadingPA) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (playersState is PlayersErrorPA) {
+                      return Center(child: Text("Erro ao carregar jogadores: ${playersState.message}", style: TextStyle(color: Colors.white)));
+                    } else {
+                      return const SizedBox.shrink();
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

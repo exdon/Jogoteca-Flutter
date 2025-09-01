@@ -107,8 +107,9 @@ class SendSuperAnonimoChallengePA extends PlayersEventPA {
   final String remetenteId;
   final String destinatarioId;
   final String desafio;
+  final String desafioPara;
 
-  SendSuperAnonimoChallengePA(this.partidaId, this.remetenteId, this.destinatarioId, this.desafio);
+  SendSuperAnonimoChallengePA(this.partidaId, this.remetenteId, this.destinatarioId, this.desafio, this.desafioPara);
 }
 
 class MarkChallengeAsCompletedPA extends PlayersEventPA {
