@@ -492,9 +492,6 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
   @override
   Widget build(BuildContext context) {
     return GamePopGuard(
-      partidaId: widget.partidaId,
-      gameId: PrazerAnonimoConstants.gameId,
-      database: PrazerAnonimoConstants.dbPartidas,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBarGame(

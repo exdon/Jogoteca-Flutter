@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:jogoteca/screens/home/home_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,9 +8,17 @@ const supabaseUrl = 'https://akhubhfmewzivdyogsmj.supabase.co';
 final supabaseKey = dotenv.env['SUPABASE_KEY']!;
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await dotenv.load(fileName: 'supabase.env');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+
+  // Travar apenas no modo retrato
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown, // opcional, se quiser permitir de cabeça para baixo
+  ]);
 
   runApp(const MyApp());
 }

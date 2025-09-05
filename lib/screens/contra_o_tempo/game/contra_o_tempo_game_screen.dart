@@ -329,9 +329,6 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
   @override
   Widget build(BuildContext context) {
     return GamePopGuard(
-        partidaId: widget.partidaId,
-        gameId: ContraOTempoConstants.gameId,
-        database: ContraOTempoConstants.dbPartidas,
         child: Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBarGame(

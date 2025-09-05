@@ -4,16 +4,10 @@ import 'package:jogoteca/shared/shared_widgets.dart';
 
 class GamePopGuard extends StatelessWidget {
   final Widget child;
-  final String partidaId;
-  final String gameId;
-  final String database;
 
   const GamePopGuard({
     super.key,
-    required this.child,
-    required this.partidaId,
-    required this.gameId,
-    required this.database,
+    required this.child
   });
 
   @override
@@ -23,12 +17,7 @@ class GamePopGuard extends StatelessWidget {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
 
-        SharedWidgets.showExitConfirmationDialog(
-          context: context,
-          partidaId: partidaId,
-          gameId: gameId,
-          database: database,
-        );
+        SharedWidgets.showExitConfirmationDialog(context: context);
       },
       child: child,
     );
