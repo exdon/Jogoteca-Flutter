@@ -186,7 +186,7 @@ class _AddPlayersPAScreenState extends State<AddPlayersPAScreen> {
             ),
             // Overlay escuro
             Positioned.fill(
-              child: Container(color: Colors.black.withOpacity(0.4)),
+              child: Container(color: Colors.black.withOpacity(0.7)),
             ),
             Padding(
               padding: EdgeInsets.only(
@@ -231,14 +231,16 @@ class _AddPlayersPAScreenState extends State<AddPlayersPAScreen> {
     return Expanded(
       child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(builder: (context, state) {
           if (state is PlayersLoadingPA) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00FF41)),
+            ));
           } else if (state is PlayersLoadedPA) {
             return WidgetsPABuild.buildPlayersList(
               players: state.players,
               onToggleOverlay: _toggleOverlay,
             );
           } else if (state is PlayersErrorPA) {
-            return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
+            return Center(child: Text('Erro: ${state.message}', style: const TextStyle(color: Color(0xFF00FF41)),));
           } else {
             return const SizedBox.shrink();
           }

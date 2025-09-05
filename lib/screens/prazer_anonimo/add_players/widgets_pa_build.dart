@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class WidgetsPABuild {
+  static const Color _hackerGreen = Color(0xFF39FF14); // Um verde neon mais brilhante
+  static const Color _darkBackgroundColor = Colors.black;
+
+  static TextStyle _hackerTextStyle(double fontSize, {FontWeight fontWeight = FontWeight.normal, Color color = _hackerGreen}) {
+    return GoogleFonts.orbitron( // Fonte mais legível e futurista
+      color: color,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      shadows: [
+        Shadow(
+          blurRadius: 5.0,
+          color: color.withOpacity(0.5),
+          offset: const Offset(0, 0),
+        ),
+      ],
+    );
+  }
 
   static Widget buildAddButton({
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
+    return OutlinedButton.icon(
       onPressed: onPressed,
-      icon: const FaIcon(FontAwesomeIcons.userPlus, color: Colors.black),
-      label: const Text(
+      icon: const FaIcon(FontAwesomeIcons.userPlus, color: _hackerGreen, size: 18),
+      label: Text(
         'Adicionar jogador',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+        style: _hackerTextStyle(18),
       ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: const TextStyle(fontSize: 16),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        side: const BorderSide(color: _hackerGreen, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     );
   }
@@ -31,69 +50,59 @@ class WidgetsPABuild {
         children: [
           TextField(
             controller: nomeController,
-            // enabled: !isNavigating,
-            decoration: InputDecoration(
-              labelText: 'Nome do jogador',
-              labelStyle: const TextStyle(color: Colors.white),
-              enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
-              ),
-              suffixIcon: IconButton(
-                onPressed: onCancel,
-                icon: const Icon(Icons.close, color: Colors.white),
-              ),
-            ),
-            style: const TextStyle(color: Colors.white),
-            cursorColor: Colors.green,
+            decoration: _inputDecoration('Nome do jogador', onCancel),
+            style: _hackerTextStyle(16, color: Colors.white),
+            cursorColor: _hackerGreen,
           ),
           const SizedBox(height: 20),
           TextField(
             controller: pinController,
-            // enabled: !isNavigating,
-            decoration: InputDecoration(
-              labelText: 'PIN (4-6 dígitos)',
-              labelStyle: const TextStyle(color: Colors.white),
-              enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
-              ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
-              ),
-              counterStyle: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              suffixIcon: IconButton(
-                onPressed: onCancel,
-                icon: const Icon(Icons.close, color: Colors.white),
-              ),
-            ),
+            decoration: _inputDecoration('PIN (4-6 dígitos)', onCancel),
             keyboardType: TextInputType.number,
             obscureText: true,
             maxLength: 6,
-            cursorColor: Colors.green,
-            style: const TextStyle(color: Colors.white),
+            style: _hackerTextStyle(16, color: Colors.white),
+            cursorColor: _hackerGreen,
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
             onPressed: onSave,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white70,
-              foregroundColor: Colors.black,
+            icon: const Icon(FontAwesomeIcons.save, color: Colors.black),
+            label: Text(
+              'Salvar Jogador',
+              style: GoogleFonts.orbitron(
+                color: Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.sports_kabaddi, size: 24),
-                SizedBox(width: 15),
-                Text('Salvar Jogador', style: TextStyle(fontSize: 18)),
-              ],
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _hackerGreen,
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  static InputDecoration _inputDecoration(String label, VoidCallback onCancel) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: _hackerTextStyle(16),
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _hackerGreen),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _hackerGreen, width: 2),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      counterStyle: _hackerTextStyle(14),
+      suffixIcon: IconButton(
+        onPressed: onCancel,
+        icon: const Icon(Icons.close, color: _hackerGreen),
       ),
     );
   }
@@ -109,46 +118,40 @@ class WidgetsPABuild {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 50),
-              const Text(
+              Text(
                 'Nenhum jogador cadastrado',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: _hackerTextStyle(20, fontWeight: FontWeight.bold),
               ),
-              const Text(
+              const SizedBox(height: 10),
+              Text(
                 'Adicione jogadores para iniciar o jogo',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                ),
+                style: _hackerTextStyle(16),
               ),
               const SizedBox(height: 50),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.info_outline, color: Colors.white),
-                    tooltip: 'Mais informações',
-                    onPressed: onToggleOverlay,
+              GestureDetector(
+                onTap: onToggleOverlay,
+                child: Card(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(color: _hackerGreen, width: 1),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: onToggleOverlay,
-                      child: const Card(
-                        color: Colors.white10,
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, color: _hackerGreen),
+                        const SizedBox(width: 10),
+                        Expanded(
                           child: Text(
                             'Por que devo adicionar jogadores?',
-                            style: TextStyle(color: Colors.white),
+                            style: _hackerTextStyle(15),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -156,29 +159,33 @@ class WidgetsPABuild {
       );
     }
 
-    // Lista de jogadores
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 10),
-      itemCount: players.length + 1, // +1 para o título
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'Jogadores:',
-              style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
-          );
-        }
-        final player = players[index - 1];
-        return ListTile(
-          leading: const Icon(FontAwesomeIcons.userNinja, color: Colors.white),
-          title: Text(
-            player['nome'],
-            style: const TextStyle(color: Colors.white),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            'Jogadores:',
+            style: _hackerTextStyle(22, fontWeight: FontWeight.bold),
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 10),
+            itemCount: players.length,
+            itemBuilder: (context, index) {
+              final player = players[index];
+              return ListTile(
+                leading: const FaIcon(FontAwesomeIcons.userNinja, color: _hackerGreen),
+                title: Text(
+                  player['nome'],
+                  style: _hackerTextStyle(18, color: Colors.white),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -190,39 +197,44 @@ class WidgetsPABuild {
 
     return OverlayEntry(
       builder: (context) => Positioned(
-        top: screenSize.height / 2 - 100,
-        left: screenSize.width / 2 - 125,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         child: Material(
-          elevation: 8,
-          color: Colors.transparent,
-          child: Container(
-            width: 250,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black26)],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Por que adicionar jogadores?',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Isso permite personalizar a experiência e registrar respostas individuais.',
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: onClose,
-                    child: const Text('Fechar'),
+          color: Colors.black.withOpacity(0.9),
+          child: Center(
+            child: Container(
+              width: screenSize.width * 0.85,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: _darkBackgroundColor,
+                border: Border.all(color: _hackerGreen, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Por que adicionar jogadores?',
+                    style: _hackerTextStyle(20, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    'Isso permite personalizar a experiência e registrar respostas individuais.',
+                    textAlign: TextAlign.center,
+                    style: _hackerTextStyle(16, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: onClose,
+                    child: Text(
+                      'Fechar',
+                      style: _hackerTextStyle(16),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -234,22 +246,23 @@ class WidgetsPABuild {
     return SizedBox(
       width: double.infinity,
       height: 50,
-      child: ElevatedButton(
+      child: ElevatedButton.icon(
         onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white70,
-          foregroundColor: Colors.black
+        icon: Icon(FontAwesomeIcons.play, color: onPressed != null ? Colors.black : Colors.grey[700], size: 18),
+        label: Text(
+          'Iniciar Jogo',
+          style: GoogleFonts.orbitron(
+            color: onPressed != null ? Colors.black : Colors.grey[700],
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(FontAwesomeIcons.dice),
-            SizedBox(width: 15),
-            Text('Iniciar Jogo', style: TextStyle(fontSize: 18)),
-          ],
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _hackerGreen,
+          disabledBackgroundColor: _hackerGreen.withOpacity(0.2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
       ),
     );
   }
-
 }
