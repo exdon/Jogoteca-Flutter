@@ -1,5 +1,3 @@
-
-
 import 'package:jogoteca/screens/prazer_anonimo/game/game_state_manager_pa.dart';
 
 class RoundManagerPA {
@@ -72,6 +70,7 @@ class RoundManagerPA {
 
   // Finaliza a rodada
   void finishRound() {
+    roundResults.shuffle();
     showRoundResults = true;
   }
 

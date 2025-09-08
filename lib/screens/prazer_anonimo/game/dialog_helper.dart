@@ -20,27 +20,36 @@ class DialogHelper {
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text("Validar PIN"),
+          backgroundColor: const Color(0xFF0d1a0f),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: Colors.green.withOpacity(0.5), width: 1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          title: const Text(
+            "// Validar PIN",
+            style: TextStyle(color: Colors.green, fontFamily: 'monospace'),
+          ),
           content: TextField(
             controller: pinController,
             enabled: !isProcessing,
-            decoration: const InputDecoration(
-              labelText: "Digite o PIN",
-              labelStyle: TextStyle(color: Colors.black),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey),
+            decoration: InputDecoration(
+              labelText: "PIN_DA_RODADA",
+              labelStyle: TextStyle(color: Colors.green.withOpacity(0.7), fontFamily: 'monospace'),
+              enabledBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.green),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
+              focusedBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.cyanAccent),
               ),
-              counterStyle: TextStyle(
+              counterStyle: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
             obscureText: true,
             keyboardType: TextInputType.number,
-            cursorColor: Colors.green,
+            cursorColor: Colors.cyanAccent,
+            style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 18),
           ),
           actions: [
             TextButton(
@@ -50,10 +59,11 @@ class DialogHelper {
                 }
               },
               child: const Text(
-                "Cancelar",
+                "cancelar",
                 style: TextStyle(
-                  color: Colors.red,
+                  color: Colors.redAccent,
                   fontWeight: FontWeight.w500,
+                  fontFamily: 'monospace',
                 ),
               ),
             ),
@@ -63,17 +73,18 @@ class DialogHelper {
                   : () => onCheckPin(dialogContext, playerId, correctPin, questions, players),
               child: isProcessing
                   ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.cyanAccent)),
+                    )
                   : const Text(
-                "Confirmar",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+                      "confirmar",
+                      style: TextStyle(
+                        color: Colors.cyanAccent,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
             ),
           ],
         );
@@ -91,23 +102,50 @@ class DialogHelper {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Directs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
-        backgroundColor: Color(0xFF0d2412),
+        title: const Text(
+          '// Directs',
+          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+        ),
+        backgroundColor: const Color(0xFF0d1a0f),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: Colors.green.withOpacity(0.5), width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
           child: StatefulBuilder(
             builder: (context, setStateDialog) {
+              if (directMessages.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Nenhuma mensagem recebida.',
+                    style: TextStyle(color: Colors.white70, fontFamily: 'monospace'),
+                  ),
+                );
+              }
               return ListView.builder(
                 itemCount: directMessages.length,
                 itemBuilder: (context, index) {
                   final message = directMessages[index];
+                  final isUnread = !message['lida'];
                   return Card(
-                    color: !message['lida'] ? Color(0xFF214F1B) : null,
+                    color: isUnread ? const Color(0xFF1a3b20) : Colors.black.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: isUnread ? Colors.green : Colors.grey.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     child: ListTile(
-                      title: const Text('De: **********', style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text(message['lida'] ? 'Lida' : 'Não lida', textAlign: TextAlign.end,),
-                      subtitleTextStyle: TextStyle(color: !message['lida'] ? Colors.white : Colors.black),
+                      leading: Icon(isUnread ? Icons.mark_email_unread_outlined : Icons.mark_email_read_outlined, color: isUnread ? Colors.greenAccent : Colors.grey),
+                      title: const Text(
+                        'De: **********',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'monospace'),
+                      ),
+                      subtitle: Text(
+                        isUnread ? 'Nova Mensagem' : 'Lida',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(color: isUnread ? Colors.greenAccent : Colors.grey, fontFamily: 'monospace'),
+                      ),
                       onTap: () {
                         if (!message['lida']) {
                           onReadMessage(message, playerId, setStateDialog);
@@ -125,7 +163,7 @@ class DialogHelper {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fechar', style: TextStyle(color: Colors.white),),
+            child: const Text('fechar', style: TextStyle(color: Colors.cyanAccent, fontFamily: 'monospace')),
           ),
         ],
       ),
@@ -145,46 +183,62 @@ class DialogHelper {
 
     showDialog(
       context: context,
+      barrierDismissible: false, // Impede fechar ao clicar fora
       builder: (context) => AlertDialog(
-        contentPadding: const EdgeInsets.only(top: 10, left: 24, right: 24, bottom: 20),
+        backgroundColor: const Color(0xFF0d1a0f),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: Colors.green.withOpacity(0.5), width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.all(0),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Mensagem',
-                  style: TextStyle(
-                    color: Color(0xFF214F1B),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '// Mensagem',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontFamily: 'monospace',
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    if (!message['lida']) {
-                      playersBloc.add(MarkMessageAsReadPA(partidaId, playerId, message['id']));
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.redAccent),
+                    onPressed: () {
+                      if (!message['lida']) {
+                        playersBloc.add(MarkMessageAsReadPA(partidaId, playerId, message['id']));
 
-                      final index = directMessages.indexWhere((m) => m['id'] == message['id']);
-                      if (index != -1) {
-                        directMessages[index]['lida'] = true;
-                      }
-                      onUpdateMainState();
+                        final index = directMessages.indexWhere((m) => m['id'] == message['id']);
+                        if (index != -1) {
+                          directMessages[index]['lida'] = true;
+                        }
+                        onUpdateMainState();
 
-                      if (setStateDialog != null) {
-                        setStateDialog(() {});
+                        if (setStateDialog != null) {
+                          setStateDialog(() {});
+                        }
                       }
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            Text(message['mensagem'], style: TextStyle(fontSize: 16)),
+            const Divider(color: Colors.green),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+              child: Text(
+                message['mensagem'],
+                style: const TextStyle(fontSize: 16, color: Colors.white, fontFamily: 'monospace'),
+              ),
+            ),
           ],
         ),
       ),
@@ -198,30 +252,45 @@ class DialogHelper {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        contentPadding: const EdgeInsets.only(top: 10, left: 24, right: 24, bottom: 20),
+        backgroundColor: const Color(0xFF0d1a0f),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: Colors.grey.withOpacity(0.5), width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.all(0),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Mensagem',
-                  style: TextStyle(
-                    color: Color(0xFF214F1B),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '// Mensagem',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontFamily: 'monospace',
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Color(0xFF214F1B),),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.redAccent),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            Text(message['mensagem'], style: TextStyle(fontSize: 16),),
+            const Divider(color: Colors.grey),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+              child: Text(
+                message['mensagem'],
+                style: const TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'monospace'),
+              ),
+            ),
           ],
         ),
       ),

@@ -457,7 +457,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
         extendBodyBehindAppBar: true,
         appBar: AppBarGame(
           disablePartida: true,
-          deletePartida: false,
+          deletePartida: true,
           partidaId: widget.partidaId,
           gameId: VoceMeConheceConstants.gameId,
           database: VoceMeConheceConstants.dbPartidas,

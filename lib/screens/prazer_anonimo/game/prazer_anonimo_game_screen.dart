@@ -492,108 +492,119 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
   @override
   Widget build(BuildContext context) {
     return GamePopGuard(
-      child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBarGame(
-          disablePartida: true,
-          deletePartida: false,
-          partidaId: widget.partidaId,
-          gameId: PrazerAnonimoConstants.gameId,
-          database: PrazerAnonimoConstants.dbPartidas,
-        ),
-        body: BlocListener<PlayersBlocPA, PlayersStatePA>(
-          listener: (context, state) {
-            if ((state is PlayersLoadedWithMessagesPA || state is PlayersLoadedWithMessagesAndSA) &&
-                _players.isNotEmpty &&
-                indice < _players.length) {
-
-              final jogadorAtualId = _players[indice]['id'];
-
-              if (_directsLoadedFor != jogadorAtualId) {
-                return;
-              }
-
-              final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
-                  ? state.directMessages
-                  : (state as PlayersLoadedWithMessagesPA).directMessages;
-
-              final unread = mensagens
-                  .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
-                  .toList();
-
-              setState(() {
-                hasDirectMessages = unread.isNotEmpty;
-                directMessages = unread;
-                // SA questions pendentes (somente no novo estado)
-                if (state is PlayersLoadedWithMessagesAndSA) {
-                  superAnonimoQuestions = state.superAnonimoQuestions;
-                } else {
-                  superAnonimoQuestions = [];
+      child: SafeArea(
+        child: Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBarGame(
+            disablePartida: true,
+            deletePartida: false,
+            partidaId: widget.partidaId,
+            gameId: PrazerAnonimoConstants.gameId,
+            database: PrazerAnonimoConstants.dbPartidas,
+          ),
+          body: BlocListener<PlayersBlocPA, PlayersStatePA>(
+            listener: (context, state) {
+              if ((state is PlayersLoadedWithMessagesPA || state is PlayersLoadedWithMessagesAndSA) &&
+                  _players.isNotEmpty &&
+                  indice < _players.length) {
+        
+                final jogadorAtualId = _players[indice]['id'];
+        
+                if (_directsLoadedFor != jogadorAtualId) {
+                  return;
                 }
-              });
-
-              // Atualiza controllers com as SA pendentes
-              _formControllers.setPendingSAQuestions(superAnonimoQuestions);
-            }
-          },
-          child: Stack(
-            children: [
-              // Fundo
-              Positioned.fill(
-                child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
-              ),
-              // Overlay escuro
-              Positioned.fill(
-                child: Container(color: Colors.black.withOpacity(0.4)),
-              ),
-              Padding(
-                padding: EdgeInsets.only(
-                  top: kToolbarHeight + MediaQuery.of(context).padding.top + 10,
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+        
+                final List<Map<String, dynamic>> mensagens = state is PlayersLoadedWithMessagesAndSA
+                    ? state.directMessages
+                    : (state as PlayersLoadedWithMessagesPA).directMessages;
+        
+                final unread = mensagens
+                    .where((m) => m['lida'] == false && m['remetenteId'] != jogadorAtualId)
+                    .toList();
+        
+                setState(() {
+                  hasDirectMessages = unread.isNotEmpty;
+                  directMessages = unread;
+                  // SA questions pendentes (somente no novo estado)
+                  if (state is PlayersLoadedWithMessagesAndSA) {
+                    superAnonimoQuestions = state.superAnonimoQuestions;
+                  } else {
+                    superAnonimoQuestions = [];
+                  }
+                });
+        
+                // Atualiza controllers com as SA pendentes
+                _formControllers.setPendingSAQuestions(superAnonimoQuestions);
+              }
+            },
+            child: Stack(
+              children: [
+                // Fundo
+                Positioned.fill(
+                  child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
                 ),
-                child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(
-                  builder: (context, playersState) {
-                    if (playersState is PlayersLoadedPA ||
-                        playersState is PlayersLoadedWithMessagesPA ||
-                        playersState is PlayersLoadedWithMessagesAndSA) {
-
-                      final currentPlayers =
-                      playersState is PlayersLoadedPA
-                          ? playersState.players
-                          : playersState is PlayersLoadedWithMessagesPA
-                          ? playersState.players
-                          : (playersState as PlayersLoadedWithMessagesAndSA).players;
-
-                      _players = List<Map<String, dynamic>>.from(currentPlayers);
-                      // Ordena pelo campo 'indice' (crescente)
-                      _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
-
-                      return BlocBuilder<QuestionsBlocPA, QuestionsStatePA>(
-                        builder: (context, questionsState) {
-                          if (questionsState is QuestionsLoadedPA) {
-                            return _buildGameContent(questionsState.questions);
-                          } else if (questionsState is QuestionsLoadingPA || questionsState is QuestionsInitialPA) {
-                            return const Center(child: CircularProgressIndicator());
-                          } else if (questionsState is QuestionsErrorPA) {
-                            return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
-                          } else {
-                            return const SizedBox.shrink();
-                          }
-                        },
-                      );
-                    } else if (playersState is PlayersLoadingPA) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (playersState is PlayersErrorPA) {
-                      return Center(child: Text("Erro ao carregar jogadores: ${playersState.message}", style: TextStyle(color: Colors.white)));
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
+                // Overlay escuro com efeito "scanline"
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.6),
+                      image: const DecorationImage(
+                        image: AssetImage('images/rp_background_transition.png'), // Usando uma imagem de scanline
+                        fit: BoxFit.cover,
+                        opacity: 0.1,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: kToolbarHeight + MediaQuery.of(context).padding.top + 10,
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                  ),
+                  child: BlocBuilder<PlayersBlocPA, PlayersStatePA>(
+                    builder: (context, playersState) {
+                      if (playersState is PlayersLoadedPA ||
+                          playersState is PlayersLoadedWithMessagesPA ||
+                          playersState is PlayersLoadedWithMessagesAndSA) {
+        
+                        final currentPlayers =
+                        playersState is PlayersLoadedPA
+                            ? playersState.players
+                            : playersState is PlayersLoadedWithMessagesPA
+                            ? playersState.players
+                            : (playersState as PlayersLoadedWithMessagesAndSA).players;
+        
+                        _players = List<Map<String, dynamic>>.from(currentPlayers);
+                        // Ordena pelo campo 'indice' (crescente)
+                        _players.sort((a, b) => (a['indice'] as int).compareTo(b['indice'] as int));
+        
+                        return BlocBuilder<QuestionsBlocPA, QuestionsStatePA>(
+                          builder: (context, questionsState) {
+                            if (questionsState is QuestionsLoadedPA) {
+                              return _buildGameContent(questionsState.questions);
+                            } else if (questionsState is QuestionsLoadingPA || questionsState is QuestionsInitialPA) {
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (questionsState is QuestionsErrorPA) {
+                              return Center(child: Text("Erro ao carregar perguntas: ${questionsState.message}", style: TextStyle(color: Colors.white)));
+                            } else {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        );
+                      } else if (playersState is PlayersLoadingPA) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (playersState is PlayersErrorPA) {
+                        return Center(child: Text("Erro ao carregar jogadores: ${playersState.message}", style: TextStyle(color: Colors.white)));
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -718,7 +729,7 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
     _getNewQuestion(id, perguntas, _players);
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -728,52 +739,67 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
             pinValidated: pinValidado,
             onDirectMessagesPressed: () => _showDirectMessagesDialog(id),
           ),
-          const SizedBox(height: 50),
-          if (!pinValidado) ...[
-            GameWidgets.buildValidatePinButton(
-              isProcessing: _isProcessing,
-              onPressed: () => _showPinDialog(id, pinCorreto, perguntas, _players),
+          const SizedBox(height: 30),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: !pinValidado
+                  ? Center(
+                      key: const ValueKey('pin_button'),
+                      child: GameWidgets.buildValidatePinButton(
+                        isProcessing: _isProcessing,
+                        onPressed: () => _showPinDialog(id, pinCorreto, perguntas, _players),
+                      ),
+                    )
+                  : (currentQuestionId == null
+                      ? Center(
+                          key: const ValueKey('no_question'),
+                          child: GameWidgets.buildNoQuestionsAvailable(
+                            onNextPlayer: () {
+                              if (_roundManager.eligiblePointer + 1 < _roundManager.eligiblePlayerIndices.length) {
+                                _roundManager.moveToNextPlayer();
+                                _setJogadorDaVez(_roundManager.eligiblePlayerIndices[_roundManager.eligiblePointer]);
+                                setState(() {
+                                  pinValidado = false;
+                                  currentQuestionId = null;
+                                  currentQuestion = null;
+                                });
+                              } else {
+                                setState(() {
+                                  _roundManager.finishRound();
+                                });
+                              }
+                            },
+                          ),
+                        )
+                      : Column(
+                          key: ValueKey(currentQuestionId),
+                          children: [
+                            Expanded(
+                              child: GameWidgets.buildQuestionForm(
+                                question: currentQuestion!,
+                                formControllers: _formControllers,
+                                isProcessing: _isProcessing,
+                                players: _players,
+                                currentPlayerId: id,
+                                saQuestions: superAnonimoQuestions,
+                              ),
+                            ),
+                            if (!isKeyboardOpen)
+                              GameWidgets.buildSaveButton(
+                                isProcessing: _isProcessing,
+                                onPressed: () => _salvarResposta(id, _players),
+                              ),
+                          ],
+                        )),
             ),
-          ] else ...[
-            if (currentQuestionId == null) ...[
-              GameWidgets.buildNoQuestionsAvailable(
-                onNextPlayer: () {
-                  if (_roundManager.eligiblePointer + 1 < _roundManager.eligiblePlayerIndices.length) {
-                    _roundManager.moveToNextPlayer();
-                    _setJogadorDaVez(_roundManager.eligiblePlayerIndices[_roundManager.eligiblePointer]);
-                    setState(() {
-                      pinValidado = false;
-                      currentQuestionId = null;
-                      currentQuestion = null;
-                    });
-                  } else {
-                    setState(() {
-                      _roundManager.showRoundResults = true;
-                    });
-                  }
-                },
-              ),
-            ],
-            if (currentQuestionId != null) ...[
-              Expanded(
-                child: GameWidgets.buildQuestionForm(
-                  question: currentQuestion!,
-                  formControllers: _formControllers,
-                  isProcessing: _isProcessing,
-                  players: _players,
-                  currentPlayerId: id,
-                  saQuestions: superAnonimoQuestions,
-                ),
-              ),
-              if (!isKeyboardOpen)
-                GameWidgets.buildSaveButton(
-                  isProcessing: _isProcessing,
-                  onPressed: () => _salvarResposta(id, _players),
-                ),
-            ],
-          ],
+          ),
         ],
       ),
     );
   }
 }
+

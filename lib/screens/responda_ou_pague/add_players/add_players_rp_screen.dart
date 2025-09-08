@@ -7,6 +7,7 @@ import 'package:jogoteca/blocs/responda_ou_pague/players/players_state_rp.dart';
 import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_bloc_rp.dart';
 import 'package:jogoteca/constants/app_constants.dart';
 import 'package:jogoteca/constants/responda_ou_pague/responda_ou_pague_constants.dart';
+import 'package:jogoteca/guards/game_pop_guard.dart';
 import 'package:jogoteca/screens/responda_ou_pague/add_players/add_players_rp_validator.dart';
 import 'package:jogoteca/screens/responda_ou_pague/add_players/widgets_rp_build.dart';
 import 'package:jogoteca/screens/responda_ou_pague/game/responda_ou_pague_game_screen.dart';
@@ -133,65 +134,69 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBarGame(
-        disablePartida: true,
-        deletePartida: true,
-        partidaId: widget.partidaId,
-        gameId: RespondaOuPagueConstants.gameId,
-        database: RespondaOuPagueConstants.dbPartidas,
-      ),
-      body: BlocListener<PlayersBlocRP, PlayersStateRP>(
-        listener: (context, state) {
-          if (state is PlayersErrorRP) {
-            SharedFunctions.showSnackMessage(
-                message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
-                mounted: mounted,
-                context: context
-            );
-          } else if (state is PlayersLoadedRP && jogadorFoiAdicionado) {
-            if (state.players.isNotEmpty) {
-              SharedFunctions.showSnackMessage(
-                  message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
-                  mounted: mounted,
-                  context: context
-              );
-              jogadorFoiAdicionado = false;
-            }
-          }
-        },
-        child: Stack(
-          children: [
-            // Fundo
-            Positioned.fill(
-              child: Image.asset(AppConstants.backgroundRespondaOuPague, fit: BoxFit.cover),
+    return GamePopGuard(
+        child: SafeArea(
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBarGame(
+              disablePartida: true,
+              deletePartida: true,
+              partidaId: widget.partidaId,
+              gameId: RespondaOuPagueConstants.gameId,
+              database: RespondaOuPagueConstants.dbPartidas,
             ),
-            // Overlay escuro
-            Positioned.fill(
-              child: Container(color: Colors.black.withOpacity(0.4)),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
-                left: 16,
-                right: 16,
-                bottom: 16,
-              ),
-              child: Column(
+            body: BlocListener<PlayersBlocRP, PlayersStateRP>(
+              listener: (context, state) {
+                if (state is PlayersErrorRP) {
+                  SharedFunctions.showSnackMessage(
+                      message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
+                      mounted: mounted,
+                      context: context
+                  );
+                } else if (state is PlayersLoadedRP && jogadorFoiAdicionado) {
+                  if (state.players.isNotEmpty) {
+                    SharedFunctions.showSnackMessage(
+                        message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                        mounted: mounted,
+                        context: context
+                    );
+                    jogadorFoiAdicionado = false;
+                  }
+                }
+              },
+              child: Stack(
                 children: [
-                  _buildTopSection(),
-                  const SizedBox(height: 24),
-                  _buildPlayersListSection(),
-                  const SizedBox(height: 12),
-                  if (!isKeyboardOpen)
-                    _buildBottomSection(),
+                  // Fundo
+                  Positioned.fill(
+                    child: Image.asset(AppConstants.backgroundRespondaOuPague, fit: BoxFit.cover),
+                  ),
+                  // Overlay escuro
+                  Positioned.fill(
+                    child: Container(color: Colors.black.withOpacity(0.4)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
+                    child: Column(
+                      children: [
+                        _buildTopSection(),
+                        const SizedBox(height: 24),
+                        _buildPlayersListSection(),
+                        const SizedBox(height: 12),
+                        if (!isKeyboardOpen)
+                          _buildBottomSection(),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
     );
   }
 

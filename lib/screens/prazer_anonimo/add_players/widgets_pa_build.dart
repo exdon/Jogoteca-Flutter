@@ -159,8 +159,8 @@ class WidgetsPABuild {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      padding: EdgeInsets.zero,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -169,22 +169,13 @@ class WidgetsPABuild {
             style: _hackerTextStyle(22, fontWeight: FontWeight.bold),
           ),
         ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 10),
-            itemCount: players.length,
-            itemBuilder: (context, index) {
-              final player = players[index];
-              return ListTile(
-                leading: const FaIcon(FontAwesomeIcons.userNinja, color: _hackerGreen),
-                title: Text(
-                  player['nome'],
-                  style: _hackerTextStyle(18, color: Colors.white),
-                ),
-              );
-            },
+        ...players.map((player) => ListTile(
+          leading: const FaIcon(FontAwesomeIcons.userNinja, color: _hackerGreen),
+          title: Text(
+            player['nome'],
+            style: _hackerTextStyle(18, color: Colors.white),
           ),
-        ),
+        )),
       ],
     );
   }

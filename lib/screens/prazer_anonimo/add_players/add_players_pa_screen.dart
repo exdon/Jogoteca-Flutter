@@ -4,6 +4,7 @@ import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
 import 'package:jogoteca/blocs/prazer_anonimo/players/players_event_pa.dart';
 import 'package:jogoteca/blocs/prazer_anonimo/players/players_state_pa.dart';
 import 'package:jogoteca/constants/prazer_anonimo/prazer_anonimo_constants.dart';
+import 'package:jogoteca/guards/game_pop_guard.dart';
 import 'package:jogoteca/screens/prazer_anonimo/add_players/add_players_pa_validator.dart';
 import 'package:jogoteca/screens/prazer_anonimo/add_players/widgets_pa_build.dart';
 import 'package:jogoteca/shared/service/shared_service.dart';
@@ -151,64 +152,68 @@ class _AddPlayersPAScreenState extends State<AddPlayersPAScreen> {
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBarGame(
-        disablePartida: true,
-        deletePartida: true,
-        partidaId: widget.partidaId,
-        gameId: PrazerAnonimoConstants.gameId,
-        database: PrazerAnonimoConstants.dbPartidas,
-      ),
-      body: BlocListener<PlayersBlocPA, PlayersStatePA>(
-        listener: (context, state) {
-          if (state is PlayersErrorPA) {
-            SharedFunctions.showSnackMessage(
-                message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
-                mounted: mounted,
-                context: context
-            );
-          } else if (state is PlayersLoadedPA) {
-            if (state.players.isNotEmpty) {
-              SharedFunctions.showSnackMessage(
-                  message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
-                  mounted: mounted,
-                  context: context
-              );
-            }
-          }
-        },
-        child: Stack(
-          children: [
-            // Fundo
-            Positioned.fill(
-              child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
+    return GamePopGuard(
+        child: SafeArea(
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: AppBarGame(
+              disablePartida: true,
+              deletePartida: true,
+              partidaId: widget.partidaId,
+              gameId: PrazerAnonimoConstants.gameId,
+              database: PrazerAnonimoConstants.dbPartidas,
             ),
-            // Overlay escuro
-            Positioned.fill(
-              child: Container(color: Colors.black.withOpacity(0.7)),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
-                left: 16,
-                right: 16,
-                bottom: 16,
-              ),
-              child: Column(
+            body: BlocListener<PlayersBlocPA, PlayersStatePA>(
+              listener: (context, state) {
+                if (state is PlayersErrorPA) {
+                  SharedFunctions.showSnackMessage(
+                      message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
+                      mounted: mounted,
+                      context: context
+                  );
+                } else if (state is PlayersLoadedPA) {
+                  if (state.players.isNotEmpty) {
+                    SharedFunctions.showSnackMessage(
+                        message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                        mounted: mounted,
+                        context: context
+                    );
+                  }
+                }
+              },
+              child: Stack(
                 children: [
-                  _buildTopSection(),
-                  const SizedBox(height: 24),
-                  _buildPlayersListSection(),
-                  const SizedBox(height: 12),
-                  if (!isKeyboardOpen)
-                    _buildBottomSection(),
+                  // Fundo
+                  Positioned.fill(
+                    child: Image.asset("images/background_anonimo.jpg", fit: BoxFit.cover),
+                  ),
+                  // Overlay escuro
+                  Positioned.fill(
+                    child: Container(color: Colors.black.withOpacity(0.7)),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
+                    child: Column(
+                      children: [
+                        _buildTopSection(),
+                        const SizedBox(height: 24),
+                        _buildPlayersListSection(),
+                        const SizedBox(height: 12),
+                        if (!isKeyboardOpen)
+                          _buildBottomSection(),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
     );
   }
 
