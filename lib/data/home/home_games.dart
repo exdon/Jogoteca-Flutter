@@ -60,7 +60,7 @@ class HomeGames {
     nome: 'Contra o Tempo',
     imagem: AppConstants.contraOTempoImage,
     target: RulesScreen(
-      backgroundImagePath: AppConstants.backgroundRespondaOuPague,
+      backgroundImagePath: AppConstants.backgroundContraOTempo,
       rulesText: RulesConstantsCT.rulesText,
       bloc: PlayersBlocCT(ContraOTempoService()),
       destinationBuilder: (partidaId, bloc) => AddPlayersCTScreen(partidaId: partidaId),

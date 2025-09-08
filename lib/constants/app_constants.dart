@@ -10,6 +10,7 @@ class AppConstants {
   static const String appBuildingImage = 'images/app_building.png';
   static const String backgroundPrazerAnonimo = 'images/background_anonimo.jpg';
   static const String backgroundRespondaOuPague = 'images/rp_background.png';
+  static const String backgroundContraOTempo = 'images/blue-gradient.jpg';
   static const String backgroundVoceMeConhece = 'images/vmc_background.png';
   static const String rpBackgroundTransition = 'images/rp_background_transition.png';
   static const String rpAngelTransition = 'images/angel.png';

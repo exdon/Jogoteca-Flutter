@@ -6,16 +6,48 @@ class WidgetsCTBuild {
   static Widget buildAddButton({
     required VoidCallback onPressed,
   }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: const FaIcon(FontAwesomeIcons.userPlus, color: Colors.black),
-      label: const Text(
-        'Adicionar jogador',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue.shade600,
+            Colors.blue.shade800,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withValues(alpha: 0.4),
+            blurRadius: 15,
+            spreadRadius: 2,
+          ),
+        ],
       ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        textStyle: const TextStyle(fontSize: 16),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: const FaIcon(FontAwesomeIcons.userPlus, color: Colors.white, size: 20),
+        label: const Text(
+          'Adicionar jogador',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            shadows: [
+              Shadow(
+                color: Colors.blue,
+                blurRadius: 5,
+              ),
+            ],
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
       ),
     );
   }
@@ -25,44 +57,112 @@ class WidgetsCTBuild {
     required VoidCallback onCancel,
     required VoidCallback onSave,
   }) {
-    return SingleChildScrollView(
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.blue.shade300,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withValues(alpha: 0.3),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
       child: Column(
         children: [
           TextField(
             controller: nomeController,
-            // enabled: !isNavigating,
             decoration: InputDecoration(
               labelText: 'Nome do jogador',
-              labelStyle: const TextStyle(color: Colors.white),
-              enabledBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white),
+              labelStyle: TextStyle(
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w500,
               ),
-              focusedBorder: const OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.lightGreen),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(color: Colors.blue.shade400, width: 2),
               ),
-              suffixIcon: IconButton(
-                onPressed: onCancel,
-                icon: const Icon(Icons.close, color: Colors.white),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(color: Colors.blue.shade600, width: 3),
+              ),
+              filled: true,
+              fillColor: Colors.blue.shade50,
+              suffixIcon: Container(
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  onPressed: onCancel,
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
               ),
             ),
-            style: const TextStyle(color: Colors.white),
-            cursorColor: Colors.green,
+            style: TextStyle(
+              color: Colors.blue.shade900,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            cursorColor: Colors.blue.shade600,
           ),
           const SizedBox(height: 20),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: onSave,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white70,
-              foregroundColor: Colors.black,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.sports_kabaddi, size: 24),
-                SizedBox(width: 15),
-                Text('Salvar Jogador', style: TextStyle(fontSize: 18)),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.lightBlue.shade400,
+                  Colors.blue.shade600,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.4),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
               ],
+            ),
+            child: ElevatedButton(
+              onPressed: onSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.sports_kabaddi, size: 24, color: Colors.white),
+                  SizedBox(width: 15),
+                  Text(
+                    'Salvar Jogador',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.blue.shade800,
+                          blurRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -74,56 +174,176 @@ class WidgetsCTBuild {
     if (players.isEmpty) {
       return SingleChildScrollView(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 50),
-              const Text(
-                'Nenhum jogador cadastrado',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+          child: Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.blue.shade300,
+                width: 2,
               ),
-              const Text(
-                'Adicione jogadores para iniciar o jogo',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  spreadRadius: 3,
                 ),
-              ),
-              const SizedBox(height: 50),
-            ],
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  FontAwesomeIcons.userGroup,
+                  color: Colors.blue.shade600,
+                  size: 50,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Nenhum jogador cadastrado',
+                  style: TextStyle(
+                    color: Colors.blue.shade800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    shadows: [
+                      Shadow(
+                        color: Colors.blue.shade300,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Adicione jogadores para iniciar o jogo',
+                  style: TextStyle(
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
     // Lista de jogadores
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 10),
-      itemCount: players.length + 1, // +1 para o título
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'Jogadores:',
-              style: TextStyle(fontSize: 18, color: Colors.white),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.blue.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withValues(alpha: 0.2),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: players.length + 1, // +1 para o título
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blue.shade400,
+                    Colors.blue.shade600,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(FontAwesomeIcons.userGroup, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Text(
+                    'Jogadores (${players.length})',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.blue.shade800,
+                          blurRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          final player = players[index - 1];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: Colors.blue.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.blue.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(FontAwesomeIcons.userNinja, color: Colors.blue.shade600, size: 20),
+              ),
+              title: Text(
+                player['nome'],
+                style: TextStyle(
+                  color: Colors.blue.shade800,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                ),
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '#${index}',
+                  style: TextStyle(
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
             ),
           );
-        }
-        final player = players[index - 1];
-        return ListTile(
-          leading: const Icon(FontAwesomeIcons.userNinja, color: Colors.white),
-          title: Text(
-            player['nome'],
-            style: const TextStyle(color: Colors.white),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 
@@ -144,26 +364,42 @@ class WidgetsCTBuild {
             width: 250,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black26)],
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.blue.shade400, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Por que adicionar jogadores?',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade800,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Isso permite personalizar a experiência e registrar respostas individuais.',
+                  style: TextStyle(color: Colors.blue.shade600),
                 ),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: TextButton(
+                  child: ElevatedButton(
                     onPressed: onClose,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Fechar'),
                   ),
                 ),
@@ -176,25 +412,71 @@ class WidgetsCTBuild {
   }
 
   static Widget buildStartGameButton({required VoidCallback? onPressed}) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 50,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: onPressed != null
+            ? LinearGradient(
+                colors: [
+                  Colors.orange.shade400,
+                  Colors.orange.shade600,
+                ],
+              )
+            : LinearGradient(
+                colors: [
+                  Colors.grey.withValues(alpha: 0.5),
+                  Colors.grey.withValues(alpha: 0.3),
+                ],
+              ),
+        boxShadow: onPressed != null
+            ? [
+                BoxShadow(
+                  color: Colors.orange.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  spreadRadius: 3,
+                ),
+              ]
+            : [],
+      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white70,
-          foregroundColor: Colors.black
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(FontAwesomeIcons.dice),
+            Icon(
+              FontAwesomeIcons.dice,
+              color: onPressed != null ? Colors.white : Colors.grey.shade400,
+              size: 24,
+            ),
             SizedBox(width: 15),
-            Text('Iniciar Jogo', style: TextStyle(fontSize: 18)),
+            Text(
+              'Iniciar Jogo',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: onPressed != null ? Colors.white : Colors.grey.shade400,
+                shadows: onPressed != null
+                    ? [
+                        Shadow(
+                          color: Colors.orange.shade800,
+                          blurRadius: 5,
+                        ),
+                      ]
+                    : [],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
 }

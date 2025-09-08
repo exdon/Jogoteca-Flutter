@@ -16,7 +16,6 @@ import 'package:jogoteca/shared/service/shared_service.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 
-
 class AddPlayersCTScreen extends StatefulWidget {
   final String partidaId;
 
@@ -26,19 +25,33 @@ class AddPlayersCTScreen extends StatefulWidget {
   State<AddPlayersCTScreen> createState() => _AddPlayersCTScreenState();
 }
 
-class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
-
+class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> with TickerProviderStateMixin {
   bool isAdding = false;
   final _nomeController = TextEditingController();
   String nomeJogador = '';
   int jogadorIndice = 0;
-
   bool jogadorAcabouDeSerAdicionado = false;
 
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // Animação de pulso suave
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(
+      begin: 0.3,
+      end: 0.8,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+    _pulseController.repeat(reverse: true);
 
     context.read<PlayersBlocCT>().add(LoadPlayersCT(widget.partidaId));
     SharedService(
@@ -48,10 +61,10 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
     ).setPartidaAtiva(true);
   }
 
-
   @override
   void dispose() {
     _nomeController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -63,7 +76,6 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
   void _resetTextFields() {
     _nomeController.clear();
   }
-
 
   void _savePlayer() {
     final nome = _nomeController.text.trim();
@@ -135,53 +147,89 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return GamePopGuard(
-        child: SafeArea(
-          child: Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBarGame(
-            disablePartida: true,
-            deletePartida: true,
-            partidaId: widget.partidaId,
-            gameId: ContraOTempoConstants.gameId,
-            database: ContraOTempoConstants.dbPartidas,
-          ),
-          body: BlocListener<PlayersBlocCT, PlayersStateCT>(
-            listener: (context, state) {
-              if (state is PlayersErrorCT) {
-                SharedFunctions.showSnackMessage(
-                    message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
-                    mounted: mounted,
-                    context: context
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBarGame(
+          disablePartida: true,
+          deletePartida: true,
+          partidaId: widget.partidaId,
+          gameId: ContraOTempoConstants.gameId,
+          database: ContraOTempoConstants.dbPartidas,
+        ),
+        body: Stack(
+          children: [
+            // Gradiente de fundo com tons de azul claro
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF87CEEB), // Sky Blue
+                      Color(0xFF4682B4), // Steel Blue
+                      Color(0xFF1E90FF), // Dodger Blue
+                      Color(0xFF0077BE), // Azure Blue
+                    ],
+                    stops: [0.0, 0.3, 0.7, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Efeito de pulso animado
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.center,
+                        radius: 1.2,
+                        colors: [
+                          Colors.lightBlue.withValues(alpha: _pulseAnimation.value * 0.15),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
                 );
-              } else if (state is PlayersLoadedCT) {
-                if (jogadorAcabouDeSerAdicionado && state.players.isNotEmpty) {
+              },
+            ),
+            // Overlay sutil para suavizar
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+            // Conteúdo principal
+            BlocListener<PlayersBlocCT, PlayersStateCT>(
+              listener: (context, state) {
+                if (state is PlayersErrorCT) {
                   SharedFunctions.showSnackMessage(
-                      message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                      message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
                       mounted: mounted,
                       context: context
                   );
-                  jogadorAcabouDeSerAdicionado = false;
+                } else if (state is PlayersLoadedCT) {
+                  if (jogadorAcabouDeSerAdicionado && state.players.isNotEmpty) {
+                    SharedFunctions.showSnackMessage(
+                        message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                        mounted: mounted,
+                        context: context
+                    );
+                    jogadorAcabouDeSerAdicionado = false;
+                  }
                 }
-              }
-            },
-            child: Stack(
-              children: [
-                // Fundo
-                Positioned.fill(
-                  child: Image.asset(AppConstants.backgroundRespondaOuPague, fit: BoxFit.cover),
-                ),
-                // Overlay escuro
-                Positioned.fill(
-                  child: Container(color: Colors.black.withOpacity(0.4)),
-                ),
-                Padding(
+              },
+              child: SafeArea(
+                child: Padding(
                   padding: EdgeInsets.only(
-                    top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
+                    top: kToolbarHeight + 50,
                     left: 16,
                     right: 16,
                     bottom: 16,
@@ -197,11 +245,11 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-                ),
+          ],
         ),
+      ),
     );
   }
 
@@ -223,11 +271,32 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
     return Expanded(
       child: BlocBuilder<PlayersBlocCT, PlayersStateCT>(builder: (context, state) {
         if (state is PlayersLoadingCT) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade800),
+              strokeWidth: 3,
+            ),
+          );
         } else if (state is PlayersLoadedCT) {
           return WidgetsCTBuild.buildPlayersList(players: state.players);
         } else if (state is PlayersErrorCT) {
-          return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                border: Border.all(color: Colors.red, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Erro: ${state.message}',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
         } else {
           return const SizedBox.shrink();
         }
@@ -238,7 +307,6 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
 
   Widget _buildBottomSection() {
     return BlocBuilder<PlayersBlocCT, PlayersStateCT>(builder: (context, state) {
-
       final bool canStart = state is PlayersLoadedCT && state.players.isNotEmpty;
 
       return Column(
@@ -247,17 +315,8 @@ class _AddPlayersCTScreenState extends State<AddPlayersCTScreen> {
             onPressed: canStart ? _startGame : null,
           ),
           const SizedBox(height: 25),
-          // Seção para entrar em jogo existente
-          // AddPlayersCTWidgets.buildJoinGameSection(
-          //   partidaIdController: _partidaIdController,
-          //   isNavigating: _isNavigating,
-          //   onJoinGame: _navigateToJoinGame,
-          // ),
         ],
       );
-
-    },
-    );
+    });
   }
-
 }
