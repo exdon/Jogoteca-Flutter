@@ -25,7 +25,9 @@ class HomeData {
       titulo: '⭐ Recomendados para você',
       jogos: [
         HomeGames.prazerAnonimo,
-        HomeGames.jogo4,
+        HomeGames.voceMeConhece,
+        HomeGames.respondaOuPague,
+        HomeGames.contraOTempo,
       ],
     ),
   ];

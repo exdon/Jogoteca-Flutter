@@ -2,7 +2,7 @@ class AppConstants {
   static const String appTitle = 'JOGOTECA';
   static const String backgroundImage = "images/background_game.jpg";
   static const String adultContentLogo = "images/18+_logo.webp";
-  static const String defaultGameImage = 'images/espiao.jpg';
+  static const String defaultGameImage = 'images/app_build.png';
   static const String prazerAnonimoImage = 'images/prazer_anonimo_banner.png';
   static const String respondaOuPagueImage = 'images/rp_banner_cut.png';
   static const String contraOTempoImage = 'images/ct_banner.png';

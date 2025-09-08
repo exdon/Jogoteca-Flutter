@@ -26,15 +26,48 @@ class AddPlayersRPScreen extends StatefulWidget {
   State<AddPlayersRPScreen> createState() => _AddPlayersRPScreenState();
 }
 
-class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
+class _AddPlayersRPScreenState extends State<AddPlayersRPScreen>
+    with TickerProviderStateMixin {
   bool isAdding = false;
   final _nomeController = TextEditingController();
   String nomeJogador = '';
   bool jogadorFoiAdicionado = false;
 
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Configurar animações
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _glowAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _glowController,
+      curve: Curves.easeInOut,
+    ));
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
 
     context.read<PlayersBlocRP>().add(LoadPlayersRP(widget.partidaId));
     SharedService(
@@ -44,10 +77,11 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
     ).setPartidaAtiva(true);
   }
 
-
   @override
   void dispose() {
     _nomeController.dispose();
+    _glowController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -135,65 +169,119 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return GamePopGuard(
-        child: SafeArea(
-          child: Scaffold(
-            extendBodyBehindAppBar: true,
-            appBar: AppBarGame(
-              disablePartida: true,
-              deletePartida: true,
-              partidaId: widget.partidaId,
-              gameId: RespondaOuPagueConstants.gameId,
-              database: RespondaOuPagueConstants.dbPartidas,
-            ),
-            body: BlocListener<PlayersBlocRP, PlayersStateRP>(
-              listener: (context, state) {
-                if (state is PlayersErrorRP) {
+        child: Scaffold(
+          extendBodyBehindAppBar: true,
+          resizeToAvoidBottomInset: false, // Impede que o Scaffold redimensione com o teclado
+          appBar: AppBarGame(
+            disablePartida: true,
+            deletePartida: true,
+            partidaId: widget.partidaId,
+            gameId: RespondaOuPagueConstants.gameId,
+            database: RespondaOuPagueConstants.dbPartidas,
+          ),
+          body: BlocListener<PlayersBlocRP, PlayersStateRP>(
+            listener: (context, state) {
+              if (state is PlayersErrorRP) {
+                SharedFunctions.showSnackMessage(
+                    message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
+                    mounted: mounted,
+                    context: context
+                );
+              } else if (state is PlayersLoadedRP && jogadorFoiAdicionado) {
+                if (state.players.isNotEmpty) {
                   SharedFunctions.showSnackMessage(
-                      message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
+                      message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
                       mounted: mounted,
                       context: context
                   );
-                } else if (state is PlayersLoadedRP && jogadorFoiAdicionado) {
-                  if (state.players.isNotEmpty) {
-                    SharedFunctions.showSnackMessage(
-                        message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
-                        mounted: mounted,
-                        context: context
-                    );
-                    jogadorFoiAdicionado = false;
-                  }
+                  jogadorFoiAdicionado = false;
                 }
+              }
+            },
+            child: AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Stack(
+                  children: [
+                    // Background image
+                    Positioned.fill(
+                      child: Image.asset(
+                        AppConstants.backgroundRespondaOuPague,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    // Gradient overlay com animação
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.3),
+                              Colors.purple.withOpacity(0.2 * _glowAnimation.value),
+                              Colors.cyan.withOpacity(0.15 * _glowAnimation.value),
+                              Colors.black.withOpacity(0.6),
+                            ],
+                            stops: const [0.0, 0.3, 0.7, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Efeito de partículas
+                    Positioned.fill(
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: RadialGradient(
+                                center: Alignment.center,
+                                radius: 1.5 * _pulseAnimation.value,
+                                colors: [
+                                  Colors.cyan.withOpacity(0.05 * _glowAnimation.value),
+                                  Colors.purple.withOpacity(0.03 * _glowAnimation.value),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0.0, 0.5, 1.0],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Conteúdo principal com SingleChildScrollView
+                    SafeArea(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                          top: kToolbarHeight + 10,
+                          left: 16,
+                          right: 16,
+                          bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Considera o teclado
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height -
+                                       MediaQuery.of(context).padding.top -
+                                       kToolbarHeight -
+                                       MediaQuery.of(context).viewInsets.bottom - 60,
+                          ),
+                          child: Column(
+                            children: [
+                              _buildTopSection(),
+                              const SizedBox(height: 16),
+                              _buildPlayersListSection(isKeyboardOpen),
+                              const SizedBox(height: 16),
+                              if (!isKeyboardOpen)
+                                _buildBottomSection(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
               },
-              child: Stack(
-                children: [
-                  // Fundo
-                  Positioned.fill(
-                    child: Image.asset(AppConstants.backgroundRespondaOuPague, fit: BoxFit.cover),
-                  ),
-                  // Overlay escuro
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.4)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                    ),
-                    child: Column(
-                      children: [
-                        _buildTopSection(),
-                        const SizedBox(height: 24),
-                        _buildPlayersListSection(),
-                        const SizedBox(height: 12),
-                        if (!isKeyboardOpen)
-                          _buildBottomSection(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -202,56 +290,221 @@ class _AddPlayersRPScreenState extends State<AddPlayersRPScreen> {
 
   Widget _buildTopSection() {
     if (isAdding) {
-      return WidgetsRPBuild.buildPlayerFields(
-        nomeController: _nomeController,
-        onCancel: _cancelAddingPlayer,
-        onSave: _savePlayer,
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        child: WidgetsRPBuild.buildPlayerFields(
+          nomeController: _nomeController,
+          onCancel: _cancelAddingPlayer,
+          onSave: _savePlayer,
+        ),
       );
     } else {
-      return WidgetsRPBuild.buildAddButton(
-        onPressed: () => setState(() => isAdding = true),
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withOpacity(0.1),
+              Colors.cyan.withOpacity(0.05),
+              Colors.purple.withOpacity(0.05),
+            ],
+          ),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.cyan.withOpacity(0.1),
+              blurRadius: 20,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            AnimatedBuilder(
+              animation: _glowAnimation,
+              builder: (context, child) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.cyan.withOpacity(0.1 * _glowAnimation.value),
+                        Colors.purple.withOpacity(0.1 * _glowAnimation.value),
+                      ],
+                    ),
+                  ),
+                  child: const Text(
+                    'Responda ou Pague',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Prepare-se para perguntas e desafios reveladores!\nAdicione jogadores para começar.',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            AnimatedBuilder(
+              animation: _pulseAnimation,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _pulseAnimation.value,
+                  child: WidgetsRPBuild.buildAddButton(
+                    onPressed: () => setState(() => isAdding = true),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       );
     }
   }
 
-  Widget _buildPlayersListSection() {
-    return Expanded(
-      child: BlocBuilder<PlayersBlocRP, PlayersStateRP>(builder: (context, state) {
-        if (state is PlayersLoadingRP) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is PlayersLoadedRP) {
-          return WidgetsRPBuild.buildPlayersList(players: state.players);
-        } else if (state is PlayersErrorRP) {
-          return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
-        } else {
-          return const SizedBox.shrink();
-        }
-      },
+  Widget _buildPlayersListSection(bool isKeyboardOpen) {
+    return Container(
+      height: isKeyboardOpen ? 200 : 300, // Altura fixa baseada no estado do teclado
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.05),
+            Colors.black.withOpacity(0.1),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BlocBuilder<PlayersBlocRP, PlayersStateRP>(
+          builder: (context, state) {
+            if (state is PlayersLoadingRP) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Carregando jogadores...',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              );
+            } else if (state is PlayersLoadedRP) {
+              return WidgetsRPBuild.buildPlayersList(
+                players: state.players,
+                isKeyboardOpen: isKeyboardOpen,
+              );
+            } else if (state is PlayersErrorRP) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Erro: ${state.message}',
+                      style: const TextStyle(color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return const Center(
+                child: Text(
+                  'Estado desconhecido',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
   }
 
   Widget _buildBottomSection() {
-    return BlocBuilder<PlayersBlocRP, PlayersStateRP>(builder: (context, state) {
+    return BlocBuilder<PlayersBlocRP, PlayersStateRP>(
+      builder: (context, state) {
+        final bool canStart = state is PlayersLoadedRP && state.players.isNotEmpty;
 
-      final bool canStart = state is PlayersLoadedRP && state.players.isNotEmpty;
-
-      return Column(
-        children: [
-          WidgetsRPBuild.buildStartGameButton(
-            onPressed: canStart ? _startGame : null,
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.08),
+                Colors.cyan.withOpacity(0.03),
+                Colors.purple.withOpacity(0.03),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.15),
+              width: 1,
+            ),
           ),
-          const SizedBox(height: 16),
-          // Seção para entrar em jogo existente
-          // AddPlayersWidgets.buildJoinGameSection(
-          //   partidaIdController: _partidaIdController,
-          //   isNavigating: _isNavigating,
-          //   onJoinGame: _navigateToJoinGame,
-          // ),
-        ],
-      );
-
-    },
+          child: Column(
+            children: [
+              AnimatedBuilder(
+                animation: _glowAnimation,
+                builder: (context, child) {
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: canStart ? [
+                        BoxShadow(
+                          color: Colors.cyan.withOpacity(0.3 * _glowAnimation.value),
+                          blurRadius: 15,
+                          spreadRadius: 1,
+                        ),
+                      ] : [],
+                    ),
+                    child: WidgetsRPBuild.buildStartGameButton(
+                      onPressed: canStart ? _startGame : null,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
