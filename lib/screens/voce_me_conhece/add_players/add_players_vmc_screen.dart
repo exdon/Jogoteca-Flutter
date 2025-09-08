@@ -17,7 +17,6 @@ import 'package:jogoteca/shared/service/shared_service.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 
-
 class AddPlayersVMCScreen extends StatefulWidget {
   final String partidaId;
 
@@ -27,19 +26,33 @@ class AddPlayersVMCScreen extends StatefulWidget {
   State<AddPlayersVMCScreen> createState() => _AddPlayersVMCScreenState();
 }
 
-class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
-
+class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> with TickerProviderStateMixin {
   bool isAdding = false;
   final _nomeController = TextEditingController();
   String nomeJogador = '';
   int jogadorIndice = 0;
-
   bool jogadorAcabouDeSerAdicionado = false;
 
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // Animação de brilho neon
+    _glowController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _glowAnimation = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _glowController,
+      curve: Curves.easeInOut,
+    ));
+    _glowController.repeat(reverse: true);
 
     context.read<PlayersBlocVMC>().add(LoadPlayersVMC(widget.partidaId));
     SharedService(
@@ -49,10 +62,10 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
     ).setPartidaAtiva(true);
   }
 
-
   @override
   void dispose() {
     _nomeController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -64,7 +77,6 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
   void _resetTextFields() {
     _nomeController.clear();
   }
-
 
   void _savePlayer() {
     final nome = _nomeController.text.trim();
@@ -136,53 +148,78 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return GamePopGuard(
-        child: SafeArea(
-          child: Scaffold(
-            extendBodyBehindAppBar: true,
-            appBar: AppBarGame(
-              disablePartida: true,
-              deletePartida: true,
-              partidaId: widget.partidaId,
-              gameId: ContraOTempoConstants.gameId,
-              database: ContraOTempoConstants.dbPartidas,
-            ),
-            body: BlocListener<PlayersBlocVMC, PlayersStateVMC>(
-              listener: (context, state) {
-                if (state is PlayersErrorVMC) {
-                  SharedFunctions.showSnackMessage(
-                      message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
-                      mounted: mounted,
-                      context: context
+        child: Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBarGame(
+            disablePartida: true,
+            deletePartida: true,
+            partidaId: widget.partidaId,
+            gameId: ContraOTempoConstants.gameId,
+            database: ContraOTempoConstants.dbPartidas,
+          ),
+          body: Stack(
+            children: [
+              // Background image - covers entire screen
+              Positioned.fill(
+                child: Image.asset(
+                  AppConstants.backgroundVoceMeConhece,
+                  fit: BoxFit.cover
+                ),
+              ),
+              // Gradient overlay with neon colors
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.4),
+                ),
+              ),
+              // Animated glow effect
+              AnimatedBuilder(
+                animation: _glowAnimation,
+                builder: (context, child) {
+                  return Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 1.5,
+                          colors: [
+                            Colors.cyan.withValues(alpha: _glowAnimation.value * 0.1),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
                   );
-                } else if (state is PlayersLoadedVMC) {
-                  if (jogadorAcabouDeSerAdicionado && state.players.isNotEmpty) {
+                },
+              ),
+              // Main content with SafeArea only for content
+              BlocListener<PlayersBlocVMC, PlayersStateVMC>(
+                listener: (context, state) {
+                  if (state is PlayersErrorVMC) {
                     SharedFunctions.showSnackMessage(
-                        message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                        message: 'Erro ao adicionar jogador(a) ${SharedFunctions.capitalize(nomeJogador)}: ${state.message}',
                         mounted: mounted,
                         context: context
                     );
-                    jogadorAcabouDeSerAdicionado = false;
+                  } else if (state is PlayersLoadedVMC) {
+                    if (jogadorAcabouDeSerAdicionado && state.players.isNotEmpty) {
+                      SharedFunctions.showSnackMessage(
+                          message: 'Jogador(a) ${SharedFunctions.capitalize(nomeJogador)} adicionado com sucesso!',
+                          mounted: mounted,
+                          context: context
+                      );
+                      jogadorAcabouDeSerAdicionado = false;
+                    }
                   }
-                }
-              },
-              child: Stack(
-                children: [
-                  // Fundo
-                  Positioned.fill(
-                    child: Image.asset(AppConstants.backgroundVoceMeConhece, fit: BoxFit.cover),
-                  ),
-                  // Overlay escuro
-                  Positioned.fill(
-                    child: Container(color: Colors.black.withOpacity(0.4)),
-                  ),
-                  Padding(
+                },
+                child: SafeArea(
+                  child: Padding(
                     padding: EdgeInsets.only(
-                      top: kToolbarHeight + MediaQuery.of(context).padding.top + 50,
+                      top: kToolbarHeight + 50,
                       left: 16,
                       right: 16,
                       bottom: 16,
@@ -198,9 +235,9 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
     );
@@ -224,11 +261,32 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
     return Expanded(
       child: BlocBuilder<PlayersBlocVMC, PlayersStateVMC>(builder: (context, state) {
         if (state is PlayersLoadingVMC) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan),
+              strokeWidth: 3,
+            ),
+          );
         } else if (state is PlayersLoadedVMC) {
           return WidgetsVMCBuild.buildPlayersList(players: state.players);
         } else if (state is PlayersErrorVMC) {
-          return Center(child: Text('Erro: ${state.message}', style: TextStyle(color: Colors.white),));
+          return Center(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                border: Border.all(color: Colors.red, width: 1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Erro: ${state.message}',
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
         } else {
           return const SizedBox.shrink();
         }
@@ -239,8 +297,7 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
 
   Widget _buildBottomSection() {
     return BlocBuilder<PlayersBlocVMC, PlayersStateVMC>(builder: (context, state) {
-
-      final bool canStart = state is PlayersLoadedVMC && state.players.isNotEmpty;
+      final bool canStart = state is PlayersLoadedVMC && state.players.length >= 2;
 
       return Column(
         children: [
@@ -248,17 +305,8 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> {
             onPressed: canStart ? _startGame : null,
           ),
           const SizedBox(height: 16),
-          // Seção para entrar em jogo existente
-          // AddPlayersVMCWidgets.buildJoinGameSection(
-          //   partidaIdController: _partidaIdController,
-          //   isNavigating: _isNavigating,
-          //   onJoinGame: _navigateToJoinGame,
-          // ),
         ],
       );
-
-    },
-    );
+    });
   }
-
 }
