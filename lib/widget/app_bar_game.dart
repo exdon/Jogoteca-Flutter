@@ -61,15 +61,46 @@ class AppBarGame extends StatelessWidget implements PreferredSizeWidget {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Encerrar partida?'),
-        content: const Text('Deseja encerrar e voltar para a tela inicial?'),
+        backgroundColor: const Color(0xFF2A2A2A),
+        title: const Text('Deseja Encerrar o jogo?', style: TextStyle(color: Colors.white),),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Atenção!',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8,),
+            const Text(
+              'Todos os dados serão apagados e as configurações resetadas.',
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+            SizedBox(height: 8,),
+            const Text(
+              'Deseja continuar?',
+              style: TextStyle(color: Colors.white70, fontSize: 16),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.white70),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Encerrar'),
           ),
         ],

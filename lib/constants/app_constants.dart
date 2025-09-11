@@ -7,12 +7,14 @@ class AppConstants {
   static const String respondaOuPagueImage = 'images/rp_banner_cut.png';
   static const String contraOTempoImage = 'images/ct_banner.png';
   static const String voceMeConheceImage = 'images/vmc_banner.png';
+  static const String alfabetoInsanoImage = 'images/ai_banner.png';
   static const String appBuildingImage = 'images/app_building.png';
   static const String backgroundPrazerAnonimo = 'images/background_anonimo.jpg';
   static const String backgroundRespondaOuPague = 'images/rp_background.png';
   static const String backgroundContraOTempo = 'images/blue-gradient.jpg';
   static const String backgroundVoceMeConhece = 'images/vmc_background.png';
   static const String rpBackgroundTransition = 'images/rp_background_transition.png';
+  static const String backgroundAlfabetoInsano = 'images/ai_background.png';
   static const String rpAngelTransition = 'images/angel.png';
   static const String rpDemonTransition = 'images/demon.png';
   static const String lottieFuturisticParticles = 'assets/lottie/futuristic_particles.json';

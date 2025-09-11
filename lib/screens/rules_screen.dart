@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class RulesScreen<T extends StateStreamableSource<Object?>> extends StatefulWidget {
   final String backgroundImagePath;
   final String rulesText;
+  final MarkdownStyleSheet styleSheet;
   final T bloc;
   final Widget Function(String partidaId, T bloc) destinationBuilder;
 
@@ -13,6 +15,7 @@ class RulesScreen<T extends StateStreamableSource<Object?>> extends StatefulWidg
     required this.rulesText,
     required this.bloc,
     required this.destinationBuilder,
+    required this.styleSheet,
   });
 
   @override
@@ -116,19 +119,13 @@ class _RulesScreenState<T extends StateStreamableSource<Object?>> extends State<
           ),
           child: Scrollbar(
             thumbVisibility: true,
-            child: SingleChildScrollView(
-              child: AnimatedOpacity(
-                opacity: _textOpacity,
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeIn,
-                child: Text(
-                  widget.rulesText,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    height: 1.5,
-                  ),
-                ),
+            child: AnimatedOpacity(
+              opacity: _textOpacity,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeIn,
+              child: Markdown(
+                data: widget.rulesText,
+                styleSheet: widget.styleSheet,
               ),
             ),
           ),

@@ -191,55 +191,64 @@ class DialogHelper {
           borderRadius: BorderRadius.circular(8),
         ),
         contentPadding: const EdgeInsets.all(0),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '// Mensagem',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      fontFamily: 'monospace',
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header fixo
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '// Mensagem',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontFamily: 'monospace',
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.redAccent),
-                    onPressed: () {
-                      if (!message['lida']) {
-                        playersBloc.add(MarkMessageAsReadPA(partidaId, playerId, message['id']));
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.redAccent),
+                      onPressed: () {
+                        if (!message['lida']) {
+                          playersBloc.add(MarkMessageAsReadPA(partidaId, playerId, message['id']));
 
-                        final index = directMessages.indexWhere((m) => m['id'] == message['id']);
-                        if (index != -1) {
-                          directMessages[index]['lida'] = true;
-                        }
-                        onUpdateMainState();
+                          final index = directMessages.indexWhere((m) => m['id'] == message['id']);
+                          if (index != -1) {
+                            directMessages[index]['lida'] = true;
+                          }
+                          onUpdateMainState();
 
-                        if (setStateDialog != null) {
-                          setStateDialog(() {});
+                          if (setStateDialog != null) {
+                            setStateDialog(() {});
+                          }
                         }
-                      }
-                      Navigator.of(context).pop();
-                    },
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.green),
+              // Conteúdo da mensagem com scroll
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                  child: Text(
+                    message['mensagem'],
+                    style: const TextStyle(fontSize: 16, color: Colors.white, fontFamily: 'monospace'),
                   ),
-                ],
+                ),
               ),
-            ),
-            const Divider(color: Colors.green),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-              child: Text(
-                message['mensagem'],
-                style: const TextStyle(fontSize: 16, color: Colors.white, fontFamily: 'monospace'),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -258,40 +267,49 @@ class DialogHelper {
           borderRadius: BorderRadius.circular(8),
         ),
         contentPadding: const EdgeInsets.all(0),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    '// Mensagem',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      fontFamily: 'monospace',
+        content: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header fixo
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 10, 12, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '// Mensagem',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        fontFamily: 'monospace',
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.redAccent),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.redAccent),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(color: Colors.grey),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
-              child: Text(
-                message['mensagem'],
-                style: const TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'monospace'),
+              const Divider(color: Colors.grey),
+              // Conteúdo da mensagem com scroll
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
+                  child: Text(
+                    message['mensagem'],
+                    style: const TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'monospace'),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -7,6 +7,7 @@ class HomeData {
     HomeGames.voceMeConhece,
     HomeGames.respondaOuPague,
     HomeGames.contraOTempo,
+    HomeGames.alfabetoInsano,
   ];
 
   static final List<CategoryModel> categories = [
@@ -17,7 +18,7 @@ class HomeData {
         HomeGames.voceMeConhece,
         HomeGames.respondaOuPague,
         HomeGames.contraOTempo,
-        HomeGames.jogo4,
+        HomeGames.alfabetoInsano,
         HomeGames.jogo5,
       ],
     ),
@@ -28,6 +29,7 @@ class HomeData {
         HomeGames.voceMeConhece,
         HomeGames.respondaOuPague,
         HomeGames.contraOTempo,
+        HomeGames.alfabetoInsano,
       ],
     ),
   ];

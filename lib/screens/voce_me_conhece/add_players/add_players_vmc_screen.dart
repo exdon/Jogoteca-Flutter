@@ -16,6 +16,7 @@ import 'package:jogoteca/service/voce_me_conhece/voce_me_conhece_service.dart';
 import 'package:jogoteca/shared/service/shared_service.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
+import 'package:jogoteca/widget/voce_me_conhece/voce_me_conhece_intro.dart';
 
 class AddPlayersVMCScreen extends StatefulWidget {
   final String partidaId;
@@ -123,19 +124,28 @@ class _AddPlayersVMCScreenState extends State<AddPlayersVMCScreen> with TickerPr
     final playersBloc = context.read<PlayersBlocVMC>();
 
     try {
-      Navigator.pushReplacement(
-        context,
+      Navigator.push(
+          context,
         MaterialPageRoute(
-          builder: (_) => MultiBlocProvider(
-              providers: [
-                BlocProvider.value(value: playersBloc..add(LoadPlayersVMC(widget.partidaId)),
-                ),
-                BlocProvider(
-                  create: (_) => QuestionsBlocVMC(VoceMeConheceService())
-                    ..add(LoadQuestionsVMC()),
-                ),
-              ],
-            child: VoceMeConheceGameScreen(partidaId: widget.partidaId),
+          builder: (_) => VoceMeConheceIntro(
+              onFinish: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MultiBlocProvider(
+                      providers: [
+                        BlocProvider.value(value: playersBloc..add(LoadPlayersVMC(widget.partidaId)),
+                        ),
+                        BlocProvider(
+                          create: (_) => QuestionsBlocVMC(VoceMeConheceService())
+                            ..add(LoadQuestionsVMC()),
+                        ),
+                      ],
+                      child: VoceMeConheceGameScreen(partidaId: widget.partidaId),
+                    ),
+                  ),
+                );
+              },
           ),
         ),
       );

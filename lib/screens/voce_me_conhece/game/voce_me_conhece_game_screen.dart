@@ -11,6 +11,7 @@ import 'package:jogoteca/blocs/voce_me_conhece/questions/questions_state_vmc.dar
 import 'package:jogoteca/constants/app_constants.dart';
 import 'package:jogoteca/constants/voce_me_conhece/voce_me_conhece_constants.dart';
 import 'package:jogoteca/guards/game_pop_guard.dart';
+import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 
 enum RadioEnum { verdade, mentira }
@@ -156,7 +157,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
       }
     } else {
       // Se não há perguntas disponíveis, pode avançar para o próximo jogador
-      print('Nenhuma pergunta disponível para ${_currentPlayer!['nome']}');
+      SharedFunctions.showSnackMessage(message: 'Nenhuma pergunta disponível para ${_currentPlayer!['nome']}', mounted: mounted, context: context);
       _checkIfGameIsOver();
     }
   }
@@ -175,7 +176,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
         _nextPlayerOrEndGame();
       }
     } catch (e) {
-      print('Erro ao verificar se jogo acabou: $e');
+      SharedFunctions.showSnackMessage(message: 'Erro ao verificar se jogo acabou: $e', mounted: mounted, context: context);
       // Em caso de erro, continuar normalmente
       _nextPlayerOrEndGame();
     }
@@ -199,7 +200,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
       );
       return response;
     } catch (e) {
-      print('Erro ao verificar pergunta respondida: $e');
+      SharedFunctions.showSnackMessage(message: 'Erro ao verificar pergunta respondida: $e', mounted: mounted, context: context);
       return false;
     }
   }
@@ -251,7 +252,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
 
       // Não adicionar LoadPlayersVMC aqui para evitar recarregamento desnecessário
     } catch (e) {
-      print('Erro ao salvar resposta: $e');
+      SharedFunctions.showSnackMessage(message: 'Erro ao salvar resposta: $e', mounted: mounted, context: context);
       _answeredQuestions.remove('${_currentPlayer!['id']}_${_currentQuestion!['id']}');
       setState(() {
         _isAnswerSubmitted = false;
@@ -260,10 +261,6 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
   }
 
   void _prepareVotingPhase() {
-    print('Preparando fase de votação...');
-    print('Player atual: ${_currentPlayer?['nome']}');
-    print('Pergunta tipo: ${_currentQuestion?['tipo']}');
-
     setState(() {
       _currentPhase = GamePhase.voting;
       _votingOptions.clear();
@@ -284,12 +281,9 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
           break;
       }
 
-      print('Opções disponíveis: $_availableOptions');
-      print('Jogadores para votação: ${_draggedPlayers.length}');
-
       // Verificar se _availableOptions não está vazio
       if (_availableOptions.isEmpty) {
-        print('Erro: _availableOptions está vazio para tipo ${_currentQuestion!['tipo']}');
+        SharedFunctions.showSnackMessage(message: 'Erro: _availableOptions está vazio para tipo ${_currentQuestion!['tipo']}', mounted: mounted, context: context);
         return;
       }
 
@@ -297,7 +291,6 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
       for (String option in _availableOptions) {
         _votingOptions[option] = [];
       }
-      print('Fase de votação preparada com sucesso');
     });
   }
 
@@ -481,10 +474,8 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
               ),
               child: BlocListener<PlayersBlocVMC, PlayersStateVMC>(
                   listener: (context, state) {
-                    print('Estado recebido no listener: ${state.runtimeType}');
 
                     if (state is PlayerAnswerSavedVMC) {
-                      print('Resposta salva, preparando fase de votação');
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted && _currentPhase == GamePhase.answering) {
                           _prepareVotingPhase();
@@ -592,9 +583,6 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
   }
 
   Widget _buildGameContent() {
-    print('Fase atual: $_currentPhase');
-    print('Player atual: ${_currentPlayer?['nome']}');
-    print('Pergunta atual: ${_currentQuestion?['pergunta']}');
 
     // Para fases que não dependem de questões carregadas, não verificar _currentQuestion
     if (_currentPhase == GamePhase.ranking) {
@@ -607,12 +595,10 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
 
     // Verificar se dados essenciais estão disponíveis apenas para fases que precisam
     if (_currentPlayer == null) {
-      print('Player não disponível, mostrando loading');
       return _buildLoadingState();
     }
 
     if ((_currentPhase == GamePhase.answering || _currentPhase == GamePhase.voting) && _currentQuestion == null) {
-      print('Pergunta não disponível para fase $_currentPhase, mostrando loading');
       return _buildLoadingState();
     }
 
@@ -624,7 +610,6 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
       case GamePhase.answering:
         return _buildAnsweringPhase();
       case GamePhase.voting:
-        print('Construindo fase de votação');
         return _buildVotingPhase();
       case GamePhase.results:
         return _buildResultsPhase();
@@ -1425,7 +1410,9 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
                 Text(
                   penaltyPlayers.length == sortedPlayers.length
                       ? 'Penalidade para todos:'
-                      : 'Penalidade para os ${penaltyPlayers.length} últimos:',
+                      : penaltyPlayers.length == 1
+                        ? 'Penalidade para o último colocado:'
+                        : 'Penalidade para os ${penaltyPlayers.length} últimos colocados:',
                   style: TextStyle(
                     color: Colors.red,
                     fontSize: 16,

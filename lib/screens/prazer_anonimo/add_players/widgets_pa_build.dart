@@ -144,7 +144,7 @@ class WidgetsPABuild {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'Por que devo adicionar jogadores?',
+                            'Por que devo adicionar jogadores? E para que serve o PIN?',
                             style: _hackerTextStyle(15),
                           ),
                         ),
@@ -207,12 +207,17 @@ class WidgetsPABuild {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Por que adicionar jogadores?',
+                    'Por que adicionar jogadores? E para que serve o PIN?',
                     style: _hackerTextStyle(20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Isso permite personalizar a experiência e registrar respostas individuais.',
+                    'O nome do jogador permite com que o jogo consiga filtrar as perguntas já respondidas por ele, '
+                        'para que uma mesma pergunta não apareça duas vezes. '
+                        'Assim como também, possibilita o uso do modo super anônimo e directs, que são funcionalidades que dependem de jogadores estarem cadastrados.                                                      '
+                        'Já o PIN é uma medida simples de segurança para evitar que alguém consiga ver a pergunta de outro jogador e facilite sua identificação.                                           '
+                        'Mas fique tranquilo, o nome e o PIN são apenas para controle interno do jogo, '
+                        'como já disse antes, aqui o anônimato é lei!',
                     textAlign: TextAlign.center,
                     style: _hackerTextStyle(16, color: Colors.white70),
                   ),

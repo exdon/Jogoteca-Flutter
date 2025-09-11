@@ -1,4 +1,4 @@
-class RulesConstantsCT {
+class RulesConstantsAI {
   static const String rulesText = '''
 # ⏱️🔥 BEM-VINDO AO 
 
