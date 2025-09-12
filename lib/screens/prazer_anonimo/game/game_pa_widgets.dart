@@ -685,7 +685,7 @@ class GameWidgets {
                       borderSide = const BorderSide(color: Colors.orange);
                     }
 
-                    final String displayName = (isChallenge || isSuperAnonimo) ? item['jogadorNome'] : item['jogadorNome'];
+                    final String displayName = (isChallenge) ? item['jogadorNome'] : "Anônimo";
 
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),

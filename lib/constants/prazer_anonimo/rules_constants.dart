@@ -29,6 +29,12 @@ Não quer responder? Clique em **"Não"**. Porém...
 - ⚠️ Cada "Não" é = 1 jogador sorteado para beber.  
 - 💡 Exemplo: 4 "Não's" = 4 jogadores bebem.
 
+**Detalhe**: Se responder "Não" no campo de resposta, mais um nome será sorteado para beber.
+
+E se o grupo decidir que sua resposta não foi reveladora o suficiente, advinha? Mais um para beber.
+
+Então evite respostas vazias como "Sim", "Talvez", "Depende" etc.
+
 Evite também nas respostas citar generos como ele, ela, pois isso pode entregar quem respondeu.
 
 Prefira sempre usar "a pessoa", "ele(a)", "um(a) jogador(a)" etc.
