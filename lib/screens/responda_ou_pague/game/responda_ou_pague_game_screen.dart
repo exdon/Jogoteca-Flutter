@@ -17,6 +17,7 @@ import 'package:jogoteca/blocs/responda_ou_pague/questions/questions_state_rp.da
 import 'package:jogoteca/constants/app_constants.dart';
 import 'package:jogoteca/constants/responda_ou_pague/responda_ou_pague_constants.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum GameStep {
   generatePlayer,
@@ -55,6 +56,7 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     context.read<PlayersBlocRP>().add(LoadPlayersRP(widget.partidaId));
     _resetGame();
   }
@@ -62,6 +64,7 @@ class _RespondaOuPagueGameScreenState extends State<RespondaOuPagueGameScreen> {
   @override
   void dispose() {
     selectedPlayerController.close();
+    WakelockPlus.disable();
     super.dispose();
   }
 

@@ -13,6 +13,7 @@ import 'package:jogoteca/guards/game_pop_guard.dart';
 import 'package:jogoteca/screens/contra_o_tempo/game/game_helper_ct.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
 import 'package:jogoteca/widget/contra_o_tempo/timer_sound_manager.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ContraOTempoGameScreen extends StatefulWidget {
   final String partidaId;
@@ -60,6 +61,7 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _timerController = AnimationController(
       duration: const Duration(seconds: 30),
       vsync: this,
@@ -73,6 +75,7 @@ class _ContraOTempoGameScreenState extends State<ContraOTempoGameScreen> with Ti
     _timerController.dispose();
     _soundManager.dispose();
     _answerController.dispose();
+    WakelockPlus.disable();
     super.dispose();
   }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:jogoteca/constants/app_constants.dart';
 import 'package:jogoteca/widget/contra_o_tempo/timer_sound_manager.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class AlfabetoInsanoGameScreen extends StatefulWidget {
   final int time;
@@ -31,6 +32,7 @@ class _AlfabetoInsanoGameScreenState extends State<AlfabetoInsanoGameScreen> wit
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable(); // impede que a tela apague
     // Tornar a barra de status transparente
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
@@ -53,6 +55,7 @@ class _AlfabetoInsanoGameScreenState extends State<AlfabetoInsanoGameScreen> wit
     gameTimer?.cancel();
     _timerController.dispose();
     _soundManager.dispose();
+    WakelockPlus.disable();
     super.dispose();
   }
 

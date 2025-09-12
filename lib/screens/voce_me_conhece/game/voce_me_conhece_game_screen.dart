@@ -13,6 +13,7 @@ import 'package:jogoteca/constants/voce_me_conhece/voce_me_conhece_constants.dar
 import 'package:jogoteca/guards/game_pop_guard.dart';
 import 'package:jogoteca/shared/shared_functions.dart';
 import 'package:jogoteca/widget/app_bar_game.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum RadioEnum { verdade, mentira }
 enum GamePhase { answering, voting, results, ranking, gameOver }
@@ -58,6 +59,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _initializeControllers();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -1671,6 +1673,7 @@ class _VoceMeConheceGameScreenState extends State<VoceMeConheceGameScreen> {
     for (var controller in _textControllers) {
       controller.dispose();
     }
+    WakelockPlus.disable();
     super.dispose();
   }
 }

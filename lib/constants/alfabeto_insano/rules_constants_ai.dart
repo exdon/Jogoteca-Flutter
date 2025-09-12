@@ -1,47 +1,59 @@
 class RulesConstantsAI {
   static const String rulesText = '''
-# ⏱️🔥 BEM-VINDO AO 
+# 🧠🎉 BEM-VINDO AO **ALFABETO INSANO** 🎉🧠
 
-# **CONTRA O TEMPO** 🔥⏱️
+Um jogo onde o alfabeto encontra o caos!  
+Aqui, cada rodada é uma corrida contra o tempo, cheia de criatividade, pressão e respostas que vão do genial ao absurdo.  
 
-Aqui não tem moleza, não tem tempo pra pensar demais…  
-É você, uma pergunta, e **30 segundos** para provar que sabe — ou pagar o preço! 😈
-
-Se você gosta de adrenalina, pressão e aquele friozinho na barriga de responder sob o olhar de todos… então esse é o seu jogo.  
-Mas cuidado: o tempo corre, e **errar ou travar** pode te custar caro. 😬
+Se você acha que sabe tudo… espere até ter que lembrar de uma fruta com a letra X em menos de dois minutos. 😵‍💫  
+É simples, é caótico, e é hilário — exatamente como um bom jogo deveria ser!
 
 ---
 
-## 🎯 **COMO FUNCIONA**
+## 🎮 COMO FUNCIONA
 
-- Um jogador por vez deve responder uma pergunta.  
-- Ele tem **30 segundos** para dar a resposta.  
-- Se **acertar**, está livre e o jogo segue para o próximo.  
-- Se **errar** ou **não responder a tempo**, o grupo escolhe uma **penalidade** que ele deve cumprir. 🍺🔥
-
----
-
-## ⚠️ **REGRAS IMPORTANTES**
-
-- O tempo começa a contar **assim que a pergunta é revelada**.  
-- O jogador pode responder apenas **uma vez** — sem segundas chances.  
-- A penalidade deve ser escolhida **em consenso pelo grupo** e aplicada imediatamente.  
-- Se houver dúvida sobre a resposta, o grupo decide se será aceita ou não.
+- Uma **categoria** é sorteada (ex: cor, animal, comida, objeto…).  
+- Uma **letra aleatória** é escolhida.  
+- O grupo precisa responder **o máximo de palavras possíveis** que combinem com a categoria e com a letra.  
+  - Exemplo: **Cor com a letra A** → Azul, Amarelo…  
+- Mas atenção: o tempo está correndo! ⏳  
+- Quando o tempo acabar, ninguém pode mais responder.  
+- O grupo decide se alguém se destacou ou se todos pagam juntos uma penalidade. 😈
 
 ---
 
-## 💡 **DICAS PARA SOBREVIVER**
+## ⏱️ MODOS DE JOGO
 
-- Respire fundo e confie na sua primeira resposta.  
-- Não tente enrolar — o tempo não espera!  
-- Se errar, encare a penalidade com estilo.  
-- E claro… torça para que a pergunta não seja sobre aquele assunto que você sempre evita 😅
+Antes de começar, o grupo escolhe o nível de loucura:
+
+- 🌈 **Modo Diversão** – 2:30 minutos  
+  Tempo tranquilo, ideal pra aquecer os neurônios e rir das respostas mais bizarras.
+
+- 😬 **Modo Tensão** – 2:00 minutos  
+  Já começa a apertar… o tempo voa e os erros aparecem.
+
+- 🥵 **Modo Sufoco** – 1:30 minutos  
+  Aqui é dedo na testa e gritaria. Quem não pensar rápido, paga!
+
+- 💀 **Modo Insano** – 1:00 minuto  
+  Só para os corajosos. É caos total, gritaria e respostas que nem fazem sentido — e a gente ama isso.
 
 ---
 
-🔥 **CONTRA O TEMPO é pra quem tem coragem, rapidez e sangue nos olhos.**  
-Você está pronto pra encarar? 
+## ⚠️ REGRAS IMPORTANTES
 
-Então bora jogar — antes que o tempo acabe! ⏳💥
+- As palavras devem ser **reais e reconhecíveis** — nada de inventar nomes de alienígenas como fruta com Z.  
+- Não vale repetir a mesma palavra com variações (ex: Azul, Azul Claro, Azul Bebê…).  
+- O grupo pode votar se uma resposta é válida ou não.  
+- Quem não contribuiu ou só falou bobagem pode ser penalizado pelo grupo. 🍺
+
+---
+
+### 🎉 LEMBRE-SE
+Aqui, o tempo é seu inimigo ⏳  
+A zoeira é garantida 🤪  
+E o alfabeto… vai te testar até a última letra! 🔤  
+
+🔥 Boa sorte e que a criatividade esteja com você! 🔥
 ''';
 }

@@ -1,3 +1,4 @@
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jogoteca/blocs/prazer_anonimo/players/players_bloc_pa.dart';
@@ -49,6 +50,7 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     GameStateManagerPA.initializeGame(widget.partidaId);
     _roundManager = RoundManagerPA();
     _formControllers = FormControllersPA();
@@ -59,6 +61,7 @@ class _PrazerAnonimoGameScreenState extends State<PrazerAnonimoGameScreen> {
   void dispose() {
     _isDisposed = true;
     _formControllers.dispose();
+    WakelockPlus.disable();
     super.dispose();
   }
 

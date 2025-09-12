@@ -181,6 +181,16 @@ class HomeGames {
             fontWeight: FontWeight.bold,
             color: Colors.green,
           ),
+          h2: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.deepOrange,
+          ),
+          h3: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFfa0710),
+          ),
         ),
     ),
   );
